@@ -3,6 +3,7 @@ from GraphInterface import GraphInterface
 
 class DiGraph:
 
+
     # TODO construct a graph than can easily make a Json like:
     # {
     #    "edges": [{src, weigh, dest}...]
