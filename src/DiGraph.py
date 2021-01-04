@@ -23,7 +23,7 @@ class DiGraph:
 
     def add_node(self, node_id: int, pos: tuple = None) -> bool:
         if not self.nodes.__contains__(node_id):
-            self.nodes[node_id] = {"neighbors": {}, "neighbor of": {}, "tag": 0, "info": "", "pos": tuple}
+            self.nodes[node_id] = {"neighbors": {}, "neighbor of": {}, "tag": 0, "info": "", "pos": tuple, "pre": int}
             self.edges[node_id] = {}
             self.mc += 1
             return True
