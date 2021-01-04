@@ -15,6 +15,7 @@ class DiGraph:
             to={dest: {src:w]]
         ]
     """
+    #TODO add comment for node structor
     def __init__(self):
         self.nodes = {}  # {node_id, node_data(like Gson)}
         self.edges = {}  # {src_id: {dest, weight}}
