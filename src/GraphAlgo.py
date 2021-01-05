@@ -2,6 +2,7 @@ import GraphInterface
 from GraphAlgoInterface import GraphAlgoInterface
 from DiGraph import DiGraph
 import json
+import heapq
 
 
 class GraphAlgo(GraphAlgoInterface):
@@ -108,7 +109,28 @@ class GraphAlgo(GraphAlgoInterface):
         More info:
         https://en.wikipedia.org/wiki/Dijkstra's_algorithm
         """
-        pass
+        # if the graph is none.
+        if self.graph.v_size() == 0:
+            return float('inf', [])
+
+        # if one of those nodes is not in the graph.
+        if id1 not in self.graph.nodes.keys() or id2 not in self.graph.nodes.keys():
+            return float('inf', [])
+
+        self.dijkstra(id1, id2)
+
+        if self.graph.nodes[id2]["tag"] == 99999999:
+            return float('inf', [])
+
+        temp = self.graph.nodes[id2]
+        path = [id2]
+
+        while temp["prev"] is not None:
+            path.append(temp["prev"])
+            temp = self.graph.nodes[temp["prev"]]
+
+        path.reverse()
+        return self.graph.nodes[id2]["tag"], path
 
     def connected_component(self, id1: int) -> list:
         """
@@ -139,3 +161,52 @@ class GraphAlgo(GraphAlgoInterface):
         @return: None
         """
         pass
+
+    def dijkstra(self, src_node, dest_node,):
+        """
+            implementation of the Dijkstra algorithm for finding a shortest path
+            from source to destination. applicable on directed weighted graphs.
+
+            Parameters:
+                src_node: int
+                        the node we want to start from.
+                dest_node: int
+                        the node we want to go to.
+
+            no returns. we make changes on the nodes variables and use it outside.
+                dest_node.tag will be the weight of the shortest path.
+                dest_node.prev will be the previous node in the shortest path.
+        """
+        # initially, all nodes are unvisited
+        # unvisited = self.graph.nodes.keys()
+        unvisited = []
+        for k in self.graph.nodes.keys():
+            unvisited.append(k)
+
+        # make a minheap for the unvisited nodes.
+        heapq.heapify(unvisited)
+
+        # set all nodes distance to infinity,
+        # and all prev to None.
+        for node in self.graph.nodes.keys():
+            self.graph.nodes[node]["tag"] = 99999999
+            self.graph.nodes[node]["prev"] = None
+
+        # set the src_node to zero.
+        self.graph.nodes[src_node]["tag"] = 0
+
+        while len(unvisited) > 0:
+            # current node is the neighbor with the minimum weight.
+            curr = heapq.heappop(unvisited)
+
+            # take current node neighbors.
+            v_neighbors = {k: v for (k, v) in self.graph.edges["From"].items() if curr == k}
+            for neighbor in v_neighbors[curr].keys():
+                if (self.graph.nodes[curr]["tag"] + v_neighbors[curr][neighbor]) < self.graph.nodes[neighbor]["tag"]:
+                    # update the distance
+                    self.graph.nodes[neighbor]["tag"] = self.graph.nodes[curr]["tag"] + v_neighbors[curr][neighbor]
+                    # update parent node
+                    self.graph.nodes[neighbor]["prev"] = curr
+
+            # move the smallest element to the top of the hep for next iteration.
+            heapq.heapify(unvisited)

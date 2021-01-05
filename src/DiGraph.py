@@ -1,7 +1,7 @@
 from GraphInterface import GraphInterface
 
 
-class DiGraph(GraphInterface):
+class DiGraph:
     # TODO construct a graph than can easily make a Json like: {"edges": [{src, weigh, dest}...], "nodes": [{pos: (x, y, z), id}...]}
     # TODO add raises to methods
 
@@ -77,7 +77,7 @@ class DiGraph(GraphInterface):
         self.nodes = {}  # {node_id, node_data(like Gson)}
         self.mc = 0
 
-    def add_node(self, node_id: int, pos: tuple = ()) -> bool:
+    def add_node(self, node_id: int, pos: tuple = None) -> bool:
         """
         Adds a node to the graph.
 
@@ -95,7 +95,7 @@ class DiGraph(GraphInterface):
         """
 
         if node_id not in self.nodes:
-            self.nodes[node_id] = {"tag": 0, "info": "", "pos": pos, "prev": int}
+            self.nodes[node_id] = {"tag": 0, "info": "", "pos": pos, "prev": None}
             self.edges["From"][node_id] = {}
             self.edges["To"][node_id] = {}
             self.mc += 1
