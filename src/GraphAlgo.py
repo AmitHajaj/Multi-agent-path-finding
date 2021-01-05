@@ -132,7 +132,7 @@ class GraphAlgo(GraphAlgoInterface):
         path.reverse()
         return self.graph.nodes[id2]["tag"], path
 
-    def connected_component(self, id1: float) -> list:
+    def connected_component(self, id1: int) -> list:
         """
         Finds the Strongly Connected Component(SCC) that node id1 is a part of.
         @param id1: The node id
