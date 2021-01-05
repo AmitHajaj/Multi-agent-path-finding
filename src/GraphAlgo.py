@@ -2,6 +2,7 @@ import GraphInterface
 from GraphAlgoInterface import GraphAlgoInterface
 from DiGraph import DiGraph
 import json
+import heapq
 
 
 class GraphAlgo:
@@ -87,3 +88,22 @@ class GraphAlgo:
         @return: None
         """
         pass
+
+    def dijkstra(self, src_node, dest_node,):
+        """
+            implementation of the Dijkstra algorithm for finding a shortest path
+            from source to destination. applicable on directed weighted graphs.
+
+            Parameters:
+                src_node: int
+                        the node we want to start from.
+                dest_node: int
+                        the node we want to go to.
+
+            no returns. we make changes on the nodes variables and use it outside.
+                dest_node.tag will be the weight of the shortest path.
+                dest_node.pre will be the previous node in the shortest path.
+        """
+
+        # set the src_node to zero.
+
