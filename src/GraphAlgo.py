@@ -70,13 +70,14 @@ class GraphAlgo:
         if self.graph.nodes[id2]["tag"] == 99999999:
             return float('inf', [])
 
-        path = [self.graph.nodes[id2]]
         temp = self.graph.nodes[id2]
+        path = [id2]
 
-        while self.graph.nodes[temp]["perv"] is not None:
-            temp = self.graph.nodes[id2]["perv"]
-            path.append(temp)
+        while temp["prev"] is not None:
+            path.append(temp["prev"])
+            temp = self.graph.nodes[temp["prev"]]
 
+        path.reverse()
         return self.graph.nodes[id2]["tag"], path
 
     def connected_component(self, id1: int) -> list:
@@ -135,9 +136,9 @@ class GraphAlgo:
 
         # set all nodes distance to infinity,
         # and all prev to None.
-        for node in self.graph.nodes:
-            node["tag"] = 99999999
-            node["prev"] = None
+        for node in self.graph.nodes.keys():
+            self.graph.nodes[node]["tag"] = 99999999
+            self.graph.nodes[node]["prev"] = None
 
         # set the src_node to zero.
         self.graph.nodes[src_node]["tag"] = 0
@@ -147,13 +148,13 @@ class GraphAlgo:
             curr = heapq.heappop(unvisited)
 
             # take current node neighbors.
-            v_neighbors = {k:v for (k,v) in self.graph.edges["From"].items() if curr == k}
-            for neighbor in v_neighbors.keys():
-                if self.graph.nodes[curr]["tag"] + self.graph.edges["From"][curr][neighbor] < self.graph.nodes[neighbor]["tag"]:
+            v_neighbors = {k: v for (k, v) in self.graph.edges["From"].items() if curr == k}
+            for neighbor in v_neighbors[curr].keys():
+                if (self.graph.nodes[curr]["tag"] + v_neighbors[curr][neighbor]) < self.graph.nodes[neighbor]["tag"]:
                     # update the distance
-                    self.graph.nodes[neighbor]["tag"] = self.graph.nodes[curr]["tag"] + self.graph.edges["From"][curr][neighbor]
+                    self.graph.nodes[neighbor]["tag"] = self.graph.nodes[curr]["tag"] + v_neighbors[curr][neighbor]
                     # update parent node
-                    self.graph.nodes[neighbor]["perv"] = curr
+                    self.graph.nodes[neighbor]["prev"] = curr
 
             # move the smallest element to the top of the hep for next iteration.
             heapq.heapify(unvisited)

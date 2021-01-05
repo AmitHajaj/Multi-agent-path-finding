@@ -95,7 +95,7 @@ class DiGraph:
         """
 
         if node_id not in self.nodes:
-            self.nodes[node_id] = {"tag": int, "info": "", "pos": tuple, "prev": int}
+            self.nodes[node_id] = {"tag": float, "info": "", "pos": tuple, "prev": None}
             self.edges["From"][node_id] = {}
             self.edges["To"][node_id] = {}
             self.mc += 1
