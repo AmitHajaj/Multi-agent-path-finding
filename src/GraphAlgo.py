@@ -125,7 +125,10 @@ class GraphAlgo:
                 dest_node.prev will be the previous node in the shortest path.
         """
         # initially, all nodes are unvisited
-        unvisited = self.graph.nodes.keys()
+        # unvisited = self.graph.nodes.keys()
+        unvisited = []
+        for k in self.graph.nodes.keys():
+            unvisited.append(k)
 
         # make a minheap for the unvisited nodes.
         heapq.heapify(unvisited)
