@@ -4,7 +4,7 @@ from DiGraph import DiGraph
 import json
 
 
-class GraphAlgo:
+class GraphAlgo(GraphAlgoInterface):
 
     def __init__(self, graph):
         self.graph = graph
@@ -15,12 +15,14 @@ class GraphAlgo:
         """
         return self.graph
 
-    def load_from_json(self, file_name: str) -> bool:
+    def load_from_json(self, graphJson: str) -> bool:
         """
         Loads a graph from a json file.
-        @param file_name: The path to the json file
+        @param graphJson: The path to the json file
         @returns True if the loading was successful, False o.w.
         """
+
+
         pass
 
     def save_to_json(self, file_name: str) -> bool:

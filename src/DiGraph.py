@@ -1,7 +1,7 @@
 from GraphInterface import GraphInterface
 
 
-class DiGraph:
+class DiGraph(GraphInterface):
     # TODO construct a graph than can easily make a Json like: {"edges": [{src, weigh, dest}...], "nodes": [{pos: (x, y, z), id}...]}
     # TODO add raises to methods
 
