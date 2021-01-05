@@ -77,7 +77,7 @@ class DiGraph(GraphInterface):
         self.nodes = {}  # {node_id, node_data(like Gson)}
         self.mc = 0
 
-    def add_node(self, node_id: int, pos: tuple = None) -> bool:
+    def add_node(self, node_id: int, pos: tuple = ()) -> bool:
         """
         Adds a node to the graph.
 
@@ -95,7 +95,7 @@ class DiGraph(GraphInterface):
         """
 
         if node_id not in self.nodes:
-            self.nodes[node_id] = {"tag": 0, "info": "", "pos": tuple, "prev": int}
+            self.nodes[node_id] = {"tag": 0, "info": "", "pos": pos, "prev": int}
             self.edges["From"][node_id] = {}
             self.edges["To"][node_id] = {}
             self.mc += 1

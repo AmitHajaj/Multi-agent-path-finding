@@ -6,7 +6,7 @@ import json
 
 class GraphAlgo(GraphAlgoInterface):
 
-    def __init__(self, graph):
+    def __init__(self, graph=None):
         self.graph = graph
 
     def get_graph(self) -> GraphInterface:
@@ -15,22 +15,72 @@ class GraphAlgo(GraphAlgoInterface):
         """
         return self.graph
 
-    def load_from_json(self, graphJson: str) -> bool:
+    def load_from_json(self, filePath: str) -> bool:
         """
         Loads a graph from a json file.
-        @param graphJson: The path to the json file
+        @param filePath: The path to the json file
         @returns True if the loading was successful, False o.w.
         """
+        try:
+            g = DiGraph()
+            with open(filePath, "r") as graphJson:
+                graphObj = json.load(graphJson)
 
+                # initilaize graph's nodes
+                for node in graphObj["Nodes"]:
+                    # initilaize node's pos
+                    pos = []
+                    for coordinate in node["pos"].split(","):
+                        pos.append(coordinate)
+                    tuple(pos)
+                    # add node to grap
+                    g.add_node(node["id"], pos)
 
-        pass
+                # initialize graph's edges
+                for edge in graphObj["Edges"]:
+                    g.add_edge(edge["src"], edge["dest"], edge["w"])
 
-    def save_to_json(self, file_name: str) -> bool:
+                graphJson.close()
+                self.graph = g
+                return True
+
+        except IOError as e:
+            print("Couldn't open or read the file (%s)." % e)
+            return False
+
+    def save_to_json(self, filePath: str) -> bool:
         """
         Saves the graph in JSON format to a file
-        @param file_name: The path to the out file
+        @param graphJson: The path to the out file
         @return: True if the save was successful, False o.w.
         """
+        # make graphObj suitable for json format
+        graphObj = {"Nodes": [], "Edges": []}
+        g = self.graph
+        assert (isinstance(g, DiGraph))
+
+        nodes = g.get_all_v()
+        for key in nodes:
+            posTuple = nodes[key]["pos"]
+            posStr = ','.join(posTuple)
+            graphObj["Nodes"].append({"id": key, "pos": posStr})
+
+            neighbors = g.all_out_edges_of_node(key)
+            for neiKey in neighbors:
+                graphObj["Edges"].append({'src': key, 'w': neighbors[neiKey], 'dest': neiKey})
+
+        try:
+            with open(filePath, 'w') as graphJson:
+                json.dump(graphObj, graphJson, indent=4)
+
+                graphJson.close()
+
+                return True
+
+        except IOError as e:
+            print("Couldn't open or write to file (%s)." % e)
+            return False
+        json.load(graphJson)
         pass
 
     def shortest_path(self, id1: int, id2: int) -> (float, list):

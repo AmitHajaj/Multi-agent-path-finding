@@ -21,7 +21,7 @@ def check():
     """
     check0()
     # check1()
-    # check2()
+    check2()
 
 
 def check0():
@@ -43,6 +43,27 @@ def check0():
     print(g.get_all_v())  # prints a dict with all the graph's vertices.
     print(g.all_in_edges_of_node(1))
     print(g.all_out_edges_of_node(1))
+
+
+    #TODO add comperrator to graph in order to fix this text and move it to tester
+    #short test
+    g_algo = GraphAlgo(g)
+    file1 = '../data/A5'
+    file2 = '../data/A6'
+    g_algo.save_to_json(file2)
+    g_algo.load_from_json(file1)
+
+    if g_algo.get_graph() != g:
+        print("good")
+    else:
+        print("sh!t")
+
+    g_algo.load_from_json(file2)
+    if g_algo.get_graph() == g:
+        print("good")
+    else:
+        print("sh!t")
+
     # g_algo = GraphAlgo(g)
     # print(g_algo.shortest_path(0, 3))
     # g_algo.plot_graph()
