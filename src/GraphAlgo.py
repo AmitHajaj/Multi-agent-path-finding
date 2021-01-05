@@ -1,6 +1,7 @@
 import GraphInterface
 from GraphAlgoInterface import GraphAlgoInterface
 from DiGraph import DiGraph
+from collections import deque
 import json
 import heapq
 
@@ -132,7 +133,7 @@ class GraphAlgo(GraphAlgoInterface):
         path.reverse()
         return self.graph.nodes[id2]["tag"], path
 
-    def connected_component(self, id1: int) -> list:
+    def connected_component(self, id1: str) -> list:
         """
         Finds the Strongly Connected Component(SCC) that node id1 is a part of.
         @param id1: The node id
@@ -141,7 +142,7 @@ class GraphAlgo(GraphAlgoInterface):
         Notes:
         If the graph is None or id1 is not in the graph, the function should return an empty list []
         """
-        pass
+
 
     def connected_components(self) -> list[list]:
         """
@@ -161,6 +162,10 @@ class GraphAlgo(GraphAlgoInterface):
         @return: None
         """
         pass
+
+    # def BFS(self, start: int):
+    #     # for node in self.graph.v_size()
+    #     # queue = deque()
 
     def dijkstra(self, src_node, dest_node,):
         """
