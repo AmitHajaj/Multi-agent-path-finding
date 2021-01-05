@@ -57,7 +57,27 @@ class GraphAlgo:
         More info:
         https://en.wikipedia.org/wiki/Dijkstra's_algorithm
         """
-        pass
+        # if the graph is none.
+        if self.graph.v_size() == 0:
+            return float('inf', [])
+
+        # if one of those nodes is not in the graph.
+        if id1 not in self.graph.nodes.keys() or id2 not in self.graph.nodes.keys():
+            return float('inf', [])
+
+        self.dijkstra(id1, id2)
+
+        if self.graph.nodes[id2]["tag"] == 99999999:
+            return float('inf', [])
+
+        path = [self.graph.nodes[id2]]
+        temp = self.graph.nodes[id2]
+
+        while self.graph.nodes[temp]["perv"] is not None:
+            temp = self.graph.nodes[id2]["perv"]
+            path.append(temp)
+
+        return self.graph.nodes[id2]["tag"], path
 
     def connected_component(self, id1: int) -> list:
         """
@@ -102,8 +122,35 @@ class GraphAlgo:
 
             no returns. we make changes on the nodes variables and use it outside.
                 dest_node.tag will be the weight of the shortest path.
-                dest_node.pre will be the previous node in the shortest path.
+                dest_node.prev will be the previous node in the shortest path.
         """
+        # initially, all nodes are unvisited
+        unvisited = self.graph.nodes.keys()
+
+        # make a minheap for the unvisited nodes.
+        heapq.heapify(unvisited)
+
+        # set all nodes distance to infinity,
+        # and all prev to None.
+        for node in self.graph.nodes:
+            node["tag"] = 99999999
+            node["prev"] = None
 
         # set the src_node to zero.
+        self.graph.nodes[src_node]["tag"] = 0
 
+        while len(unvisited) > 0:
+            # current node is the neighbor with the minimum weight.
+            curr = heapq.heappop(unvisited)
+
+            # take current node neighbors.
+            v_neighbors = {k:v for (k,v) in self.graph.edges["From"].items() if curr == k}
+            for neighbor in v_neighbors.keys():
+                if self.graph.nodes[curr]["tag"] + self.graph.edges["From"][curr][neighbor] < self.graph.nodes[neighbor]["tag"]:
+                    # update the distance
+                    self.graph.nodes[neighbor]["tag"] = self.graph.nodes[curr]["tag"] + self.graph.edges["From"][curr][neighbor]
+                    # update parent node
+                    self.graph.nodes[neighbor]["perv"] = curr
+
+            # move the smallest element to the top of the hep for next iteration.
+            heapq.heapify(unvisited)
