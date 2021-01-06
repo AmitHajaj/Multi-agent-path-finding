@@ -95,7 +95,7 @@ class DiGraph:
         """
 
         if node_id not in self.nodes:
-            self.nodes[node_id] = {"tag": 0, "info": "", "pos": pos, "prev": None}
+            self.nodes[node_id] = {"tag": 0, "info": "", "pos": pos, "prev": None, "for_scc": {"index": int, "low_link": int, "on_stack": bool}}
             self.edges["From"][node_id] = {}
             self.edges["To"][node_id] = {}
             self.mc += 1

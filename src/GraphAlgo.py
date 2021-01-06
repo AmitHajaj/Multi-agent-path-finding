@@ -151,7 +151,12 @@ class GraphAlgo(GraphAlgoInterface):
         Notes:
         If the graph is None the function should return an empty list []
         """
-        pass
+        # initialize some variables
+        index = 0
+        stack = []
+
+        for node in self.graph.nodes:
+            if()
 
     def plot_graph(self) -> None:
         """
@@ -161,6 +166,16 @@ class GraphAlgo(GraphAlgoInterface):
         @return: None
         """
         pass
+
+
+    def dfs(self, visited, node_id: int):
+        if node_id not in visited:
+            visited.add(node_id)
+            for neighbor in self.graph.edges["From"][node_id]:
+                self.dfs(visited, neighbor)
+
+
+
 
     def dijkstra(self, src_node, dest_node,):
         """
