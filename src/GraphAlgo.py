@@ -181,7 +181,7 @@ class GraphAlgo(GraphAlgoInterface):
             self.graph.nodes[node_id]["for_scc"]["index"] = index
             self.graph.nodes[node_id]["for_scc"]["low_link"] = index
             index += 1
-            stack.push(node_id)
+            stack.append(node_id)
             self.graph.nodes[node_id]["for_scc"]["on_stack"] = True
 
             # Consider successors of node_id
