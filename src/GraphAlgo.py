@@ -110,16 +110,16 @@ class GraphAlgo(GraphAlgoInterface):
         """
         # if the graph is none.
         if self.graph.v_size() == 0:
-            return float('inf', [])
+            return float('inf'), []
 
         # if one of those nodes is not in the graph.
         if id1 not in self.graph.nodes.keys() or id2 not in self.graph.nodes.keys():
-            return float('inf', [])
+            return float('inf'), []
 
         self.dijkstra(id1, id2)
 
         if self.graph.nodes[id2]["tag"] == 99999999:
-            return float('inf', [])
+            return float('inf'), []
 
         temp = self.graph.nodes[id2]
         path = [id2]
@@ -240,15 +240,11 @@ class GraphAlgo(GraphAlgoInterface):
         """
         pass
 
-
     def dfs(self, visited, node_id: int):
         if node_id not in visited:
             visited.add(node_id)
             for neighbor in self.graph.edges["From"][node_id]:
                 self.dfs(visited, neighbor)
-
-
-
 
     def dijkstra(self, src_node, dest_node,):
         """
