@@ -8,7 +8,6 @@ import heapq
 # for debugging
 import time
 
-
 class GraphAlgo(GraphAlgoInterface):
 
     def __init__(self, graph=None):
@@ -118,16 +117,16 @@ class GraphAlgo(GraphAlgoInterface):
         """
         # if the graph is none.
         if self.graph.v_size() == 0:
-            return float('inf', [])
+            return float('inf'), []
 
         # if one of those nodes is not in the graph.
         if id1 not in self.graph.nodes.keys() or id2 not in self.graph.nodes.keys():
-            return float('inf', [])
+            return float('inf'), []
 
         self.dijkstra(id1, id2)
 
         if self.graph.nodes[id2]["tag"] == 99999999:
-            return float('inf', [])
+            return float('inf'), []
 
         temp = self.graph.nodes[id2]
         path = [id2]
@@ -148,7 +147,22 @@ class GraphAlgo(GraphAlgoInterface):
         Notes:
         If the graph is None or id1 is not in the graph, the function should return an empty list []
         """
-        pass
+        # empty graph, or node in that graph.
+        if self.graph.v_size() == 0 or id not in self.graph.nodes.keys() or self.graph is None:
+            return []
+        # f there is only one node in the graph.
+        if self.graph.v_size() == 1:
+            return [id1]
+
+        # else, call tge heavy shit!!
+        scc_of_graph = self.connected_components()
+
+        # check at the returned SCC where id1 is.
+        for component in scc_of_graph:
+            if id1 in component:
+                return component
+
+        return []
 
     def connected_components(self) -> list[list]:
         """
@@ -158,7 +172,71 @@ class GraphAlgo(GraphAlgoInterface):
         Notes:
         If the graph is None the function should return an empty list []
         """
-        pass
+        # initialize some variables
+        index = 0
+        stack = []
+        sc_comp = [[]]
+
+        # helper function.
+        # recursive function that dfs over the tree.
+        # it does it with some changes to fit our goal of finding SCC
+        def strong_connect(node_id: int) -> list:
+            nonlocal index
+            nonlocal stack
+            nonlocal sc_comp
+
+            self.graph.nodes[node_id]["for_scc"]["index"] = index
+            self.graph.nodes[node_id]["for_scc"]["low_link"] = index
+            index += 1
+            stack.push(node_id)
+            self.graph.nodes[node_id]["for_scc"]["on_stack"] = True
+
+            # Consider successors of node_id
+            for neighbor in self.graph.edges["From"][node_id].keys():
+                if self.graph.nodes[neighbor]["for_scc"]["index"] == -1:
+                    # Successor w has not yet been visited; recurse on it
+                    strong_connect(neighbor)
+                    self.graph.nodes[neighbor]["for_scc"]["low_link"] = min(self.graph.nodes[neighbor]["for_scc"]["low_link"], self.graph.nodes[node_id]["for_scc"]["low_link"])
+                elif self.graph.nodes[neighbor]["for_scc"]["on_stack"]:
+                    # Successor neighbor is in stack, and hence in the current SCC
+                    # If w is not on stack, then (node_id, neighbor) is an edge pointing to an SCC already found and must be ignored
+                    # Note: The next line may look odd - but is correct.
+                    # It says w.index not w.lowlink; that is deliberate and from the original paper
+                    self.graph.nodes[node_id]["for_scc"]["low_link"] = min(self.graph.nodes[neighbor]["for_scc"]["low_link"], self.graph.nodes[neighbor]["for_scc"]["index"])
+
+            # if node_id is a root node, pop the stack and generate an SCC
+            if self.graph.nodes[node_id]["for_scc"]["low_link"] == self.graph.nodes[node_id]["for_scc"]["index"]:
+                temp = []
+
+                while True:
+                    w = stack.pop()
+                    self.graph.nodes[w]["for_scc"]["on_stack"] = False
+                    temp.append(w)
+                    if node_id is not w:
+                        break
+
+                # it will return the SCC for node_id
+                return temp
+
+        for node in self.graph.nodes.keys():
+            if self.graph.nodes[node]["for_scc"]["index"] == -1:
+                sc_comp.append(strong_connect(node))
+
+        ans = [[]]
+        for l0 in sc_comp:
+            ans.append(l0)
+            break
+        # iterate over the list we got back, if there is same list in it, take only the first you see.
+        # "make a set"
+        for l1 in sc_comp:
+            for l2 in ans:
+                # if the list we want to add is already appended before.
+                if sorted(l1) == sorted(l2):
+                    break
+                else:
+                    ans.append(l1)
+
+        return ans
 
     def plot_graph(self) -> None:
         """
@@ -233,7 +311,13 @@ class GraphAlgo(GraphAlgoInterface):
     def edgeTwoSided(self, node1, node2) -> bool:
         return node1 in self.graph.edges['To'][node2] and node1 in self.graph.edges['From'][node2]
 
-    def dijkstra(self, src_node, dest_node, ):
+    def dfs(self, visited, node_id: int):
+        if node_id not in visited:
+            visited.add(node_id)
+            for neighbor in self.graph.edges["From"][node_id]:
+                self.dfs(visited, neighbor)
+
+    def dijkstra(self, src_node, dest_node,):
         """
             implementation of the Dijkstra algorithm for finding a shortest path
             from source to destination. applicable on directed weighted graphs.

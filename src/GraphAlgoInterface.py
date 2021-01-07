@@ -65,7 +65,7 @@ class GraphAlgoInterface:
         """
         raise NotImplementedError
 
-    def connected_components(self) -> List[list]:
+    def connected_components(self) -> list[list]:
         """
         Finds all the Strongly Connected Component(SCC) in the graph.
         @return: The list all SCC
