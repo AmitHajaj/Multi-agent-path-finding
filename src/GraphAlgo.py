@@ -1,8 +1,13 @@
 import GraphInterface
 from GraphAlgoInterface import GraphAlgoInterface
 from DiGraph import DiGraph
+import matplotlib.pyplot as plt
+import math
 import json
 import heapq
+# for debugging
+import time
+
 
 class GraphAlgo(GraphAlgoInterface):
 
@@ -29,10 +34,14 @@ class GraphAlgo(GraphAlgoInterface):
                 # initilaize graph's nodes
                 for node in graphObj["Nodes"]:
                     # initilaize node's pos
-                    pos = []
-                    for coordinate in node["pos"].split(","):
-                        pos.append(coordinate)
-                    tuple(pos)
+                    pos = None
+                    posStr = node["pos"]
+                    if posStr is not None:
+                        pos = []
+                        for coordinate in node["pos"].split(","):
+                            pos.append(coordinate)
+                        tuple(pos)
+
                     # add node to grap
                     g.add_node(node["id"], pos)
 
@@ -62,8 +71,12 @@ class GraphAlgo(GraphAlgoInterface):
         nodes = g.get_all_v()
         for key in nodes:
             posTuple = nodes[key]["pos"]
-            posStr = ','.join(posTuple)
-            graphObj["Nodes"].append({"id": key, "pos": posStr})
+
+            pos = None
+            if posTuple is not None:
+                pos = ','.join(map(str, posTuple))
+
+            graphObj["Nodes"].append({"id": key, "pos": pos})
 
             neighbors = g.all_out_edges_of_node(key)
             for neiKey in neighbors:
@@ -189,13 +202,17 @@ class GraphAlgo(GraphAlgoInterface):
                 if self.graph.nodes[neighbor]["for_scc"]["index"] == -1:
                     # Successor w has not yet been visited; recurse on it
                     strong_connect(neighbor)
-                    self.graph.nodes[neighbor]["for_scc"]["low_link"] = min(self.graph.nodes[neighbor]["for_scc"]["low_link"], self.graph.nodes[node_id]["for_scc"]["low_link"])
+                    self.graph.nodes[neighbor]["for_scc"]["low_link"] = min(
+                        self.graph.nodes[neighbor]["for_scc"]["low_link"],
+                        self.graph.nodes[node_id]["for_scc"]["low_link"])
                 elif self.graph.nodes[neighbor]["for_scc"]["on_stack"]:
                     # Successor neighbor is in stack, and hence in the current SCC
                     # If w is not on stack, then (node_id, neighbor) is an edge pointing to an SCC already found and must be ignored
                     # Note: The next line may look odd - but is correct.
                     # It says w.index not w.lowlink; that is deliberate and from the original paper
-                    self.graph.nodes[node_id]["for_scc"]["low_link"] = min(self.graph.nodes[neighbor]["for_scc"]["low_link"], self.graph.nodes[neighbor]["for_scc"]["index"])
+                    self.graph.nodes[node_id]["for_scc"]["low_link"] = min(
+                        self.graph.nodes[neighbor]["for_scc"]["low_link"],
+                        self.graph.nodes[neighbor]["for_scc"]["index"])
 
             # if node_id is a root node, pop the stack and generate an SCC
             if self.graph.nodes[node_id]["for_scc"]["low_link"] == self.graph.nodes[node_id]["for_scc"]["index"]:
@@ -238,7 +255,82 @@ class GraphAlgo(GraphAlgoInterface):
         Otherwise, they will be placed in a random but elegant manner.
         @return: None
         """
-        pass
+        # get nodes
+        g = self.graph
+        assert (isinstance(g, DiGraph))
+        nodes = g.get_all_v()
+
+        # initialize vars calculation
+        i = 1
+        maxX = maxY = -9999999
+        minX = minY = 9999999
+
+        # set a dict of nodes locations {id: pos}
+        locations = {}
+        for key in nodes:
+            pos = nodes[key]['pos']
+
+            # if node's location in None
+            if pos is None:
+                # calculate position of each node
+                maxX = maxY = 2
+                minY = minX = -2
+                angle = math.radians(i * 360 / len(nodes))
+                pos = (2 * math.cos(angle), 2 * math.sin(angle))
+
+                i += 1
+
+            # if node's location initialize
+            else:
+                nodeX, nodeY = float(pos[0]), float(pos[1])
+                pos = tuple(pos)
+                maxX, minX = max(maxX, nodeX), min(minX, nodeX)
+                maxY, minY = max(maxY, nodeY), min(minY, nodeY)
+
+            locations[key] = pos
+
+        # set window size
+        dx = (maxX - minX) / 4
+        dy = (maxY - minY) / 4
+        plt.xlim([minX - dx, maxX + dx])
+        plt.ylim([minY - dy, maxY + dy])
+
+        # draw graph
+        r = min((maxY - minY), (maxX - minX)) * (3 / 80)
+        for key in locations:
+            # draw nodes
+            x = float(locations[key][0])
+            y = float(locations[key][1])
+            circle = plt.Circle((x, y), label=key, edgecolor='k', facecolor='r', radius=r / 2, zorder=5)
+            plt.gcf().gca().add_artist(circle)
+
+            # draw edges
+            for neiKey in g.all_out_edges_of_node(key).keys():
+                # slope = (neiY - y) / (neiX - x)
+                # arrowY = y + arrowLen * (slope / math.sqrt(1 + slope * slope))
+                # arrowX = x + arrowLen * (1 / math.sqrt(1 + slope * slope))
+                neiX = float(locations[neiKey][0])
+                neiY = float(locations[neiKey][1])
+
+                # draw a line (for a non-directed edge)
+                if self.isDirectedE(neiKey, key):
+                    lineX, lineY = [x, neiX], [y, neiY]
+                    plt.plot(lineX, lineY, color='k', zorder=0)
+
+                # draw an arrow (for a directed edge)
+                else:
+                    distance = math.hypot((neiY - y), (neiX - x))
+                    cosAngle = (neiX - x) / distance
+                    sinAngle = (neiY - y) / distance
+                    dx = (distance - 2 * r) * cosAngle
+                    dy = (distance - 2 * r) * sinAngle
+                    plt.arrow(x, y, dx, dy, head_width=r, width=r / 10, zorder=0)
+
+        plt.show()
+        # time.sleep(60)
+
+    def isDirectedE(self, node1, node2) -> bool:
+        return node1 in self.graph.edges['To'][node2] and node1 in self.graph.edges['From'][node2]
 
     def dfs(self, visited, node_id: int):
         if node_id not in visited:
@@ -246,7 +338,7 @@ class GraphAlgo(GraphAlgoInterface):
             for neighbor in self.graph.edges["From"][node_id]:
                 self.dfs(visited, neighbor)
 
-    def dijkstra(self, src_node, dest_node,):
+    def dijkstra(self, src_node, dest_node, ):
         """
             implementation of the Dijkstra algorithm for finding a shortest path
             from source to destination. applicable on directed weighted graphs.
