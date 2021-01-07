@@ -251,3 +251,15 @@ class DiGraph:
             return True
         else:
             return False
+
+    def equals(self, otherNodes: dict, otherEdges: dict) -> bool:
+        # compare edges
+        if otherEdges['From'] != self.edges['From']:
+            return False
+
+        # compare nodes
+        for key in self.nodes:
+            if self.nodes[key]['pos'] != otherNodes[key]['pos']:
+                return False
+
+        return True
