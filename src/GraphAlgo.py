@@ -1,8 +1,12 @@
 import GraphInterface
 from GraphAlgoInterface import GraphAlgoInterface
 from DiGraph import DiGraph
+import matplotlib.pyplot as plt
+import math
 import json
 import heapq
+# for debugging
+import time
 
 
 class GraphAlgo(GraphAlgoInterface):
@@ -63,7 +67,10 @@ class GraphAlgo(GraphAlgoInterface):
         nodes = g.get_all_v()
         for key in nodes:
             posTuple = nodes[key]["pos"]
-            posStr = ','.join(posTuple)
+            if posTuple is None:
+                posTuple = (0, 0, 0)
+
+            posStr = ','.join(map(str, posTuple))
             graphObj["Nodes"].append({"id": key, "pos": posStr})
 
             neighbors = g.all_out_edges_of_node(key)
@@ -160,9 +167,73 @@ class GraphAlgo(GraphAlgoInterface):
         Otherwise, they will be placed in a random but elegant manner.
         @return: None
         """
-        pass
+        # get nodes
+        g = self.graph
+        assert (isinstance(g, DiGraph))
+        nodes = g.get_all_v()
 
-    def dijkstra(self, src_node, dest_node,):
+        # initialize vars calculation
+        i = 1
+        maxX = maxY = 0
+        minX = minY = 9999999
+
+        # set a dict of nodes locations {id: pos}
+        locations = {}
+        for key in nodes:
+            pos = nodes[key]['pos']
+            # TODO fix to pos not initilize only
+            if pos is None or pos == (0, 0, 0):
+                maxX = maxY = 2
+                minY = minX = -2
+                angle = math.radians(i * 360 / len(nodes))
+                pos = (2 * math.cos(angle), 2 * math.sin(angle))
+
+                i += 1
+            else:
+                nodeX, nodeY = float(pos[0]), float(pos[1])
+                pos = tuple(pos)
+                maxX, minX = max(maxX, nodeX), min(minX, nodeX)
+                maxY, minY = max(maxY, nodeY), min(minY, nodeY)
+
+            locations[key] = pos
+
+        dx = (maxX - minX) / 4
+        dy = (maxY - minY) / 4
+        plt.xlim([minX - dx, maxX + dx])
+        plt.ylim([minY - dy, maxY + dy])
+        r = min((maxY - minY), (maxX - minX)) * (3 / 80)
+
+        for key in locations:
+            x = float(locations[key][0])
+            y = float(locations[key][1])
+
+            circle = plt.Circle((x, y), label=key, edgecolor='k', facecolor='r', radius=r / 2, zorder=5)
+            plt.gcf().gca().add_artist(circle)
+
+            for neiKey in g.all_out_edges_of_node(key).keys():
+                neiX = float(locations[neiKey][0])
+                neiY = float(locations[neiKey][1])
+                distance = math.hypot((neiY - y), (neiX - x))
+                cosAngle = (neiX - x) / distance
+                sinAngle = (neiY - y) / distance
+                dx = (distance - 2 * r) * cosAngle
+                dy = (distance - 2 * r) * sinAngle
+
+                # slope = (neiY - y) / (neiX - x)
+                # arrowY = y + arrowLen * (slope / math.sqrt(1 + slope * slope))
+                # arrowX = x + arrowLen * (1 / math.sqrt(1 + slope * slope))
+                if self.edgeTwoSided(neiKey, key):
+                    lineX, lineY = [x, neiX], [y, neiY]
+                    plt.plot(lineX, lineY, color='k', zorder=0)
+                else:
+                    plt.arrow(x, y, dx, dy, head_width=r, width=r / 10, zorder=0)
+        plt.show(block=True)
+        # time.sleep(60)
+
+    def edgeTwoSided(self, node1, node2) -> bool:
+        return node1 in self.graph.edges['To'][node2] and node1 in self.graph.edges['From'][node2]
+
+    def dijkstra(self, src_node, dest_node, ):
         """
             implementation of the Dijkstra algorithm for finding a shortest path
             from source to destination. applicable on directed weighted graphs.
