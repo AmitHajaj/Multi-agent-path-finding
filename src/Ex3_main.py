@@ -68,7 +68,7 @@ def check0():
     file2 = '../data/A6'
     g_algo.save_to_json(file2)
     g_algo.load_from_json(file1)
-    # g_algo.plot_graph()
+    g_algo.plot_graph()
 
     if g_algo.get_graph() != g:
         print("good")
