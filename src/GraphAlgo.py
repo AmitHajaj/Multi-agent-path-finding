@@ -34,10 +34,14 @@ class GraphAlgo(GraphAlgoInterface):
                 # initilaize graph's nodes
                 for node in graphObj["Nodes"]:
                     # initilaize node's pos
-                    pos = []
-                    for coordinate in node["pos"].split(","):
-                        pos.append(coordinate)
-                    tuple(pos)
+                    pos = None
+                    posStr = node["pos"]
+                    if posStr is not None:
+                        pos = []
+                        for coordinate in node["pos"].split(","):
+                            pos.append(coordinate)
+                        tuple(pos)
+
                     # add node to grap
                     g.add_node(node["id"], pos)
 
@@ -67,11 +71,12 @@ class GraphAlgo(GraphAlgoInterface):
         nodes = g.get_all_v()
         for key in nodes:
             posTuple = nodes[key]["pos"]
-            if posTuple is None:
-                posTuple = (0, 0, 0)
 
-            posStr = ','.join(map(str, posTuple))
-            graphObj["Nodes"].append({"id": key, "pos": posStr})
+            pos = None
+            if posTuple is not None:
+                pos = ','.join(map(str, posTuple))
+
+            graphObj["Nodes"].append({"id": key, "pos": pos})
 
             neighbors = g.all_out_edges_of_node(key)
             for neiKey in neighbors:

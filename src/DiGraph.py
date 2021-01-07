@@ -168,7 +168,7 @@ class DiGraph:
 
        """
         if node_id in self.nodes:
-            return self.edges["From"][node_id]
+            return self.edges['From'][node_id]
         else:
             return None
 
@@ -252,14 +252,20 @@ class DiGraph:
         else:
             return False
 
-    def equals(self, otherNodes: dict, otherEdges: dict) -> bool:
-        # compare edges
-        if otherEdges['From'] != self.edges['From']:
-            return False
+    def __eq__(self, other) -> bool:
+        if not isinstance(other, DiGraph):
+            # don't attempt to compare against unrelated types
+            return NotImplemented
 
-        # compare nodes
+        otherNodes = other.get_all_v()
+        # loop over nodes
         for key in self.nodes:
+            # compare node's position
             if self.nodes[key]['pos'] != otherNodes[key]['pos']:
                 return False
+
+        # compare edges
+        if other.edges['From'] != self.edges['From']:
+            return False
 
         return True
