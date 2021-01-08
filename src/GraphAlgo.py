@@ -201,17 +201,17 @@ class GraphAlgo(GraphAlgoInterface):
             for neighbor in self.graph.edges["From"][node_id].keys():
                 if self.graph.nodes[neighbor]["for_scc"]["index"] == -1:
                     # Successor w has not yet been visited; recurse on it
-                    strong_connect(neighbor)
-                    self.graph.nodes[neighbor]["for_scc"]["low_link"] = min(
-                        self.graph.nodes[neighbor]["for_scc"]["low_link"],
-                        self.graph.nodes[node_id]["for_scc"]["low_link"])
+                    sc_comp.append(strong_connect(neighbor))
+                    self.graph.nodes[node_id]["for_scc"]["low_link"] = min(
+                        self.graph.nodes[node_id]["for_scc"]["low_link"],
+                        self.graph.nodes[neighbor]["for_scc"]["low_link"])
                 elif self.graph.nodes[neighbor]["for_scc"]["on_stack"]:
                     # Successor neighbor is in stack, and hence in the current SCC
                     # If w is not on stack, then (node_id, neighbor) is an edge pointing to an SCC already found and must be ignored
                     # Note: The next line may look odd - but is correct.
                     # It says w.index not w.lowlink; that is deliberate and from the original paper
                     self.graph.nodes[node_id]["for_scc"]["low_link"] = min(
-                        self.graph.nodes[neighbor]["for_scc"]["low_link"],
+                        self.graph.nodes[node_id]["for_scc"]["low_link"],
                         self.graph.nodes[neighbor]["for_scc"]["index"])
 
             # if node_id is a root node, pop the stack and generate an SCC
@@ -222,7 +222,7 @@ class GraphAlgo(GraphAlgoInterface):
                     w = stack.pop()
                     self.graph.nodes[w]["for_scc"]["on_stack"] = False
                     temp.append(w)
-                    if node_id is not w:
+                    if node_id == w:
                         break
 
                 # it will return the SCC for node_id
@@ -232,19 +232,11 @@ class GraphAlgo(GraphAlgoInterface):
             if self.graph.nodes[node]["for_scc"]["index"] == -1:
                 sc_comp.append(strong_connect(node))
 
-        ans = [[]]
-        for l0 in sc_comp:
-            ans.append(l0)
-            break
-        # iterate over the list we got back, if there is same list in it, take only the first you see.
-        # "make a set"
-        for l1 in sc_comp:
-            for l2 in ans:
-                # if the list we want to add is already appended before.
-                if sorted(l1) == sorted(l2):
-                    break
-                else:
-                    ans.append(l1)
+        ans = []
+
+        for component in sc_comp:
+            if component is not None and component.__sizeof__() != 0:
+                ans.append(component)
 
         return ans
 
