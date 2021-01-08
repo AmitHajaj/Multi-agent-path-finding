@@ -84,9 +84,9 @@ def check0():
     else:
         print("sh!t")
 
-    # g_algo = GraphAlgo(g)
-    # print(g_algo.shortest_path(0, 3))
-    # g_algo.plot_graph()
+    g_algo = GraphAlgo(g)
+    print(g_algo.shortest_path(0, 3))
+    g_algo.plot_graph()
 
 
 def check1():

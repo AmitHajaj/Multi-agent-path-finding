@@ -66,7 +66,9 @@ class GraphAlgo(GraphAlgoInterface):
         # make graphObj suitable for json format
         graphObj = {"Nodes": [], "Edges": []}
         g = self.graph
-        assert (isinstance(g, DiGraph))
+        # assert (isinstance(g, DiGraph))
+        if g is None:
+            return False
 
         nodes = g.get_all_v()
         for key in nodes:
@@ -154,7 +156,7 @@ class GraphAlgo(GraphAlgoInterface):
         If the graph is None or id1 is not in the graph, the function should return an empty list []
         """
         # empty graph, or node in that graph.
-        if self.graph.v_size() == 0 or id not in self.graph.nodes.keys() or self.graph is None:
+        if self.graph.v_size() == 0 or id1 not in self.graph.nodes.keys() or self.graph is None:
             return []
         # f there is only one node in the graph.
         if self.graph.v_size() == 1:
@@ -163,10 +165,14 @@ class GraphAlgo(GraphAlgoInterface):
         # else, call tge heavy shit!!
         scc_of_graph = self.connected_components()
 
-        # check at the returned SCC where id1 is.
+        # check at the returned SCC's where id1 is.
         for component in scc_of_graph:
             if id1 in component:
                 return component
+
+        # when finished, set back the values used to deafult.
+        for node in self.graph.nodes.keys():
+            self.graph.nodes[node]["for_scc"] = {"index": -1, "low_link": node, "on_stack": False}
 
         return []
 
@@ -180,7 +186,7 @@ class GraphAlgo(GraphAlgoInterface):
         """
 
         # empty graph, or node in that graph.
-        if self.graph is None or self.graph.v_size() == 0 or id not in self.graph.nodes.keys():
+        if self.graph is None or self.graph.v_size() == 0:
             return []
 
         # initialize some variables
@@ -243,6 +249,10 @@ class GraphAlgo(GraphAlgoInterface):
             if component is not None and component.__sizeof__() != 0:
                 ans.append(component)
 
+        # when finished set back the values used to deafult.
+        for node in self.graph.nodes.keys():
+            self.graph.nodes[node]["for_scc"] = {"index": -1, "low_link": node, "on_stack": False}
+
         return ans
 
     def plot_graph(self) -> None:
@@ -252,6 +262,9 @@ class GraphAlgo(GraphAlgoInterface):
         Otherwise, they will be placed in a random but elegant manner.
         @return: None
         """
+        if self.graph is None:
+            return None
+
         # get nodes
         g = self.graph
         assert (isinstance(g, DiGraph))
