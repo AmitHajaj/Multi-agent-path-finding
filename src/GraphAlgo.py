@@ -122,7 +122,7 @@ class GraphAlgo(GraphAlgoInterface):
         https://en.wikipedia.org/wiki/Dijkstra's_algorithm
         """
         # if the graph is none.
-        if self.graph.v_size() == 0:
+        if self.graph is None:
             return float('inf'), []
 
         # if one of those nodes is not in the graph.
@@ -178,6 +178,11 @@ class GraphAlgo(GraphAlgoInterface):
         Notes:
         If the graph is None the function should return an empty list []
         """
+
+        # empty graph, or node in that graph.
+        if self.graph is None or self.graph.v_size() == 0 or id not in self.graph.nodes.keys():
+            return []
+
         # initialize some variables
         index = 0
         stack = []
