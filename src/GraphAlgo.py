@@ -131,7 +131,9 @@ class GraphAlgo(GraphAlgoInterface):
         # make graphObj suitable for json format
         graphObj = {"Nodes": [], "Edges": []}
         g = self.graph
-        assert (isinstance(g, DiGraph))
+        # assert (isinstance(g, DiGraph))
+        if g is None:
+            return False
 
         nodes = g.get_all_v()
         for key in nodes:
@@ -179,7 +181,7 @@ class GraphAlgo(GraphAlgoInterface):
 
         """
         # if the graph is none.
-        if self.graph.v_size() == 0:
+        if self.graph is None:
             return float('inf'), []
 
         # if one of those nodes is not in the graph.
@@ -216,7 +218,7 @@ class GraphAlgo(GraphAlgoInterface):
             a list of nodes in the
         """
         # empty graph, or node in that graph.
-        if self.graph.v_size() == 0 or id not in self.graph.nodes.keys() or self.graph is None:
+        if self.graph.v_size() == 0 or node_id not in self.graph.nodes.keys() or self.graph is None:
             return []
         # f there is only one node in the graph.
         if self.graph.v_size() == 1:
@@ -226,9 +228,14 @@ class GraphAlgo(GraphAlgoInterface):
         scc_of_graph = self.connected_components()
 
         # check at the returned SCC where node_id is.
+        # check at the returned SCC's where id1 is.
         for component in scc_of_graph:
             if node_id in component:
                 return component
+
+        # when finished, set back the values used to deafult.
+        for node in self.graph.nodes.keys():
+            self.graph.nodes[node]["for_scc"] = {"index": -1, "low_link": node, "on_stack": False}
 
         return []
 
@@ -242,6 +249,11 @@ class GraphAlgo(GraphAlgoInterface):
             a list all SCC (s list of lists),
             or an empty list if the graph is None.
         """
+
+        # empty graph, or node in that graph.
+        if self.graph is None or self.graph.v_size() == 0:
+            return []
+
         # initialize some variables
         index = 0
         stack = []
@@ -258,24 +270,24 @@ class GraphAlgo(GraphAlgoInterface):
             self.graph.nodes[node_id]["for_scc"]["index"] = index
             self.graph.nodes[node_id]["for_scc"]["low_link"] = index
             index += 1
-            stack.push(node_id)
+            stack.append(node_id)
             self.graph.nodes[node_id]["for_scc"]["on_stack"] = True
 
             # Consider successors of node_id
             for neighbor in self.graph.edges["From"][node_id].keys():
                 if self.graph.nodes[neighbor]["for_scc"]["index"] == -1:
                     # Successor w has not yet been visited; recurse on it
-                    strong_connect(neighbor)
-                    self.graph.nodes[neighbor]["for_scc"]["low_link"] = min(
-                        self.graph.nodes[neighbor]["for_scc"]["low_link"],
-                        self.graph.nodes[node_id]["for_scc"]["low_link"])
+                    sc_comp.append(strong_connect(neighbor))
+                    self.graph.nodes[node_id]["for_scc"]["low_link"] = min(
+                        self.graph.nodes[node_id]["for_scc"]["low_link"],
+                        self.graph.nodes[neighbor]["for_scc"]["low_link"])
                 elif self.graph.nodes[neighbor]["for_scc"]["on_stack"]:
                     # Successor neighbor is in stack, and hence in the current SCC
                     # If w is not on stack, then (node_id, neighbor) is an edge pointing to an SCC already found and must be ignored
                     # Note: The next line may look odd - but is correct.
                     # It says w.index not w.lowlink; that is deliberate and from the original paper
                     self.graph.nodes[node_id]["for_scc"]["low_link"] = min(
-                        self.graph.nodes[neighbor]["for_scc"]["low_link"],
+                        self.graph.nodes[node_id]["for_scc"]["low_link"],
                         self.graph.nodes[neighbor]["for_scc"]["index"])
 
             # if node_id is a root node, pop the stack and generate an SCC
@@ -286,7 +298,7 @@ class GraphAlgo(GraphAlgoInterface):
                     w = stack.pop()
                     self.graph.nodes[w]["for_scc"]["on_stack"] = False
                     temp.append(w)
-                    if node_id is not w:
+                    if node_id == w:
                         break
 
                 # it will return the SCC for node_id
@@ -296,19 +308,15 @@ class GraphAlgo(GraphAlgoInterface):
             if self.graph.nodes[node]["for_scc"]["index"] == -1:
                 sc_comp.append(strong_connect(node))
 
-        ans = [[]]
-        for l0 in sc_comp:
-            ans.append(l0)
-            break
-        # iterate over the list we got back, if there is same list in it, take only the first you see.
-        # "make a set"
-        for l1 in sc_comp:
-            for l2 in ans:
-                # if the list we want to add is already appended before.
-                if sorted(l1) == sorted(l2):
-                    break
-                else:
-                    ans.append(l1)
+        ans = []
+
+        for component in sc_comp:
+            if component is not None and component.__sizeof__() != 0:
+                ans.append(component)
+
+        # when finished set back the values used to deafult.
+        for node in self.graph.nodes.keys():
+            self.graph.nodes[node]["for_scc"] = {"index": -1, "low_link": node, "on_stack": False}
 
         return ans
 
@@ -317,7 +325,11 @@ class GraphAlgo(GraphAlgoInterface):
         Plots the graph.
         If the nodes have a position, the nodes will be placed there.
         Otherwise, they will be placed in a random but elegant manner.
+        @return: None
         """
+        if self.graph is None:
+            return None
+
         # get nodes
         g = self.graph
         assert (isinstance(g, DiGraph))
