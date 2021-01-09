@@ -10,21 +10,77 @@ import time
 
 
 class GraphAlgo(GraphAlgoInterface):
+    """
+      A class that contains algorithms that could be done on graphs
+    ...
+
+    Attributes
+    ----------
+    graph : DiGraph
+        object representing a graph
+
+    Methods
+    -------
+    get_graph()
+        Returns a graph that implements GraphInterface
+
+    load_from_json(file_name: str)
+        loads a graph object to class from json
+        Returns true if successful
+
+    save_to_json(file_name: str)
+        Saves the graph in JSON format to a file
+        Returns true if successful
+
+    shortest_path( src: int, dest: int)
+        calculate the shortest path from node src to node dest using Dijkstra's Algorithm
+        Returns The distance of the path, and a list of the nodes ids that the path goes through
+
+    connected_component(node_id: int)
+        Finds the Strongly Connected Component(SCC) that node node_id is a part of.
+        Returns The list of nodes in the SCC
+
+    connected_component()
+        Finds all the Strongly Connected Component(SCC) in the graph.
+        Returns The list all SCC
+
+    def plot_graph()
+        Plots the graph.
+        If the nodes have a position, the nodes will be placed there.
+        Otherwise, they will be placed spraed on a circle.
+    """
 
     def __init__(self, graph=None):
+        """
+        Parameters
+        ----------
+            graph : a class that implements GraphInterface
+
+        """
         self.graph = graph
 
     def get_graph(self) -> GraphInterface:
         """
-        :return: the directed graph on which the algorithm works on.
+        Returns
+        -------
+        GraphInterface
+            the directed graph on which the algorithm works on.
         """
         return self.graph
 
     def load_from_json(self, filePath: str) -> bool:
         """
-        Loads a graph from a json file.
-        @param filePath: The path to the json file
-        @returns True if the loading was successful, False o.w.
+        loads a graph from a text file
+
+        Parameters
+        ----------
+        filePath: str
+            address to the text file
+
+        Returns
+        -------
+        bool
+            a flag used to indicate if the graph's load was successful
         """
         try:
             g = DiGraph()
@@ -60,8 +116,17 @@ class GraphAlgo(GraphAlgoInterface):
     def save_to_json(self, filePath: str) -> bool:
         """
         Saves the graph in JSON format to a file
-        @param graphJson: The path to the out file
-        @return: True if the save was successful, False o.w.
+
+        Parameters
+        ----------
+        filePath: str
+            address to the out file
+
+        Returns
+        -------
+        bool
+            a flag used to indicate if the graph's load was successful
+
         """
         # make graphObj suitable for json format
         graphObj = {"Nodes": [], "Edges": []}
@@ -96,76 +161,73 @@ class GraphAlgo(GraphAlgoInterface):
         json.load(graphJson)
         pass
 
-    def shortest_path(self, id1: int, id2: int) -> (float, list):
+    def shortest_path(self, src: int, dest: int) -> (float, list):
         """
-        Returns the shortest path from node id1 to node id2 using Dijkstra's Algorithm
-        @param id1: The start node id
-        @param id2: The end node id
-        @return: The distance of the path, a list of the nodes ids that the path goes through
+        calculate the shortest path from node src to node dest using Dijkstra's Algorithm
+        Parameters
+        ----------
+        src: int
+            The start node id
 
-        Example:
-#      >>> from GraphAlgo import GraphAlgo
-#       >>> g_algo = GraphAlgo()
-#        >>> g_algo.addNode(0)
-#        >>> g_algo.addNode(1)
-#        >>> g_algo.addNode(2)
-#        >>> g_algo.addEdge(0,1,1)
-#        >>> g_algo.addEdge(1,2,4)
-#        >>> g_algo.shortestPath(0,1)
-#        (1, [0, 1])
-#        >>> g_algo.shortestPath(0,2)
-#        (5, [0, 1, 2])
+        dest: int
+            The end node id
 
-        Notes:
-        If there is no path between id1 and id2, or one of them dose not exist the function returns (float('inf'),[])
-        More info:
-        https://en.wikipedia.org/wiki/Dijkstra's_algorithm
+        Returns
+        -------
+        bool
+            The distance of the path, a list of the nodes ids that the path goes through
+
         """
         # if the graph is none.
         if self.graph.v_size() == 0:
             return float('inf'), []
 
         # if one of those nodes is not in the graph.
-        if id1 not in self.graph.nodes.keys() or id2 not in self.graph.nodes.keys():
+        if src not in self.graph.nodes.keys() or dest not in self.graph.nodes.keys():
             return float('inf'), []
 
-        self.dijkstra(id1, id2)
+        self.dijkstra(src, dest)
 
-        if self.graph.nodes[id2]["tag"] == 99999999:
+        if self.graph.nodes[dest]["tag"] == 99999999:
             return float('inf'), []
 
-        temp = self.graph.nodes[id2]
-        path = [id2]
+        temp = self.graph.nodes[dest]
+        path = [dest]
 
         while temp["prev"] is not None:
             path.append(temp["prev"])
             temp = self.graph.nodes[temp["prev"]]
 
         path.reverse()
-        return self.graph.nodes[id2]["tag"], path
+        return self.graph.nodes[dest]["tag"], path
 
-    def connected_component(self, id1: int) -> list:
+    def connected_component(self, node_id: int) -> list:
         """
-        Finds the Strongly Connected Component(SCC) that node id1 is a part of.
-        @param id1: The node id
-        @return: The list of nodes in the SCC
+         Finds the Strongly Connected Component(SCC) that node node_id is a part of.
 
-        Notes:
-        If the graph is None or id1 is not in the graph, the function should return an empty list []
+        Parameters
+        ----------
+        node_id: int
+            node unique key
+
+        Returns
+        -------
+        list
+            a list of nodes in the
         """
         # empty graph, or node in that graph.
         if self.graph.v_size() == 0 or id not in self.graph.nodes.keys() or self.graph is None:
             return []
         # f there is only one node in the graph.
         if self.graph.v_size() == 1:
-            return [id1]
+            return [node_id]
 
         # else, call tge heavy shit!!
         scc_of_graph = self.connected_components()
 
-        # check at the returned SCC where id1 is.
+        # check at the returned SCC where node_id is.
         for component in scc_of_graph:
-            if id1 in component:
+            if node_id in component:
                 return component
 
         return []
@@ -173,10 +235,12 @@ class GraphAlgo(GraphAlgoInterface):
     def connected_components(self) -> list[list]:
         """
         Finds all the Strongly Connected Component(SCC) in the graph.
-        @return: The list all SCC
 
-        Notes:
-        If the graph is None the function should return an empty list []
+        Returns
+        -------
+        list
+            a list all SCC (s list of lists),
+            or an empty list if the graph is None.
         """
         # initialize some variables
         index = 0
@@ -253,7 +317,6 @@ class GraphAlgo(GraphAlgoInterface):
         Plots the graph.
         If the nodes have a position, the nodes will be placed there.
         Otherwise, they will be placed in a random but elegant manner.
-        @return: None
         """
         # get nodes
         g = self.graph
