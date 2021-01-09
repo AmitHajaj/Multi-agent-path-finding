@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 import math
 import json
 import heapq
+import sys
 # for debugging
 import time
 
@@ -133,7 +134,7 @@ class GraphAlgo(GraphAlgoInterface):
 
         self.dijkstra(id1, id2)
 
-        if self.graph.nodes[id2]["tag"] == 99999999:
+        if self.graph.nodes[id2]["tag"] == sys.maxsize:
             return float('inf'), []
 
         temp = self.graph.nodes[id2]
@@ -144,7 +145,14 @@ class GraphAlgo(GraphAlgoInterface):
             temp = self.graph.nodes[temp["prev"]]
 
         path.reverse()
-        return self.graph.nodes[id2]["tag"], path
+        path_length = self.graph.nodes[id2]["tag"]
+
+        # before the end, the variables that holds info in this function need to be set to default.
+        for node in self.graph.nodes.keys():
+            self.graph.nodes[node]["tag"] = 0
+            self.graph.nodes[node]["prev"] = None
+
+        return path_length, path
 
     def connected_component(self, id1: int) -> list:
         """
@@ -348,7 +356,7 @@ class GraphAlgo(GraphAlgoInterface):
             for neighbor in self.graph.edges["From"][node_id]:
                 self.dfs(visited, neighbor)
 
-    def dijkstra(self, src_node, dest_node, ):
+    def dijkstra(self, src_node, dest_node):
         """
             implementation of the Dijkstra algorithm for finding a shortest path
             from source to destination. applicable on directed weighted graphs.
@@ -364,28 +372,32 @@ class GraphAlgo(GraphAlgoInterface):
                 dest_node.prev will be the previous node in the shortest path.
         """
         # initially, all nodes are unvisited
-        # unvisited = self.graph.nodes.keys()
-        unvisited = []
-        for k in self.graph.nodes.keys():
-            unvisited.append(k)
-
-        # make a minheap for the unvisited nodes.
-        heapq.heapify(unvisited)
+        q = []
 
         # set all nodes distance to infinity,
         # and all prev to None.
         for node in self.graph.nodes.keys():
-            self.graph.nodes[node]["tag"] = 99999999
+            self.graph.nodes[node]["tag"] = sys.maxsize
             self.graph.nodes[node]["prev"] = None
+            q.append(node)
 
         # set the src_node to zero.
         self.graph.nodes[src_node]["tag"] = 0
+        curr = src_node
 
-        while len(unvisited) > 0:
-            # current node is the neighbor with the minimum weight.
-            curr = heapq.heappop(unvisited)
-
-            # take current node neighbors.
+        while len(q) > 0:
+            # choose the minimum weigh in the graph edges
+            temp = sys.maxsize
+            for node in self.graph.nodes.keys():
+                if self.graph.nodes[node]["tag"] < temp and node in q:
+                    temp = self.graph.nodes[node]["tag"]
+                    curr = node
+            # in case all other node are not reachable
+            if temp == sys.maxsize:
+                curr = q.pop()
+            else:
+                q.remove(curr)
+            # relaxation on the neighbors of curr.
             v_neighbors = {k: v for (k, v) in self.graph.edges["From"].items() if curr == k}
             for neighbor in v_neighbors[curr].keys():
                 if (self.graph.nodes[curr]["tag"] + v_neighbors[curr][neighbor]) < self.graph.nodes[neighbor]["tag"]:
@@ -393,6 +405,3 @@ class GraphAlgo(GraphAlgoInterface):
                     self.graph.nodes[neighbor]["tag"] = self.graph.nodes[curr]["tag"] + v_neighbors[curr][neighbor]
                     # update parent node
                     self.graph.nodes[neighbor]["prev"] = curr
-
-            # move the smallest element to the top of the hep for next iteration.
-            heapq.heapify(unvisited)
