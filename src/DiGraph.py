@@ -196,6 +196,12 @@ class DiGraph:
                 a flag used to indicate if edge addition was successful
 
        """
+        # negative weight are not allowed.
+        if weight < 0:
+            return False
+        # edge from node to it self is not allowed.
+        if src == dest:
+            return False
         if {src, dest} <= self.nodes.keys():
             self.edges["From"][src].update({dest: weight})
             self.edges["To"][dest].update({src: weight})
