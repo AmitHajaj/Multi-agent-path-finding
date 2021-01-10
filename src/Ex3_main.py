@@ -3,7 +3,6 @@ from GraphAlgo import GraphAlgo
 import numpy as np
 import matplotlib.pyplot as plt
 
-
 def check():
     """
     Graph: |V|=4 , |E|=5
@@ -36,8 +35,8 @@ def check():
     # plt.plot(x1, y1, x2, y2, marker='d')
     # plt.show()
     check0()
-    check1()
-    check2()
+    # check1()
+    # check2()
 
 
 def check0():
@@ -60,33 +59,31 @@ def check0():
     print(g.all_in_edges_of_node(1))
     print(g.all_out_edges_of_node(1))
 
-    # TODO add comperator to graph in order to fix this text and move it to tester
-    # short test
+
+    #TODO add comperrator to graph in order to fix this text and move it to tester
+    #short test
     g_algo = GraphAlgo(g)
     g_algo.plot_graph()
-    print('--------------SCC check-----------------')
-    print(g_algo.connected_components())
-    print('-------------------------------')
     file1 = '../data/A5'
     file2 = '../data/A6'
     g_algo.save_to_json(file2)
     g_algo.load_from_json(file1)
     g_algo.plot_graph()
 
-    if g_algo.get_graph() != g:
+    if not g_algo.get_graph() != g:
         print("good")
     else:
         print("sh!t")
 
     g_algo.load_from_json(file2)
-    if g_algo.get_graph() == g:
+    if g_algo.get_graph().equals(g):
         print("good")
     else:
         print("sh!t")
 
-    g_algo = GraphAlgo(g)
-    print(g_algo.shortest_path(0, 3))
-    g_algo.plot_graph()
+    # g_algo = GraphAlgo(g)
+    # print(g_algo.shortest_path(0, 3))
+    # g_algo.plot_graph()
 
 
 def check1():
@@ -197,34 +194,6 @@ def plot_square_function():
     t = np.arange(0, 10, 0.2)
     plt.plot(t, t ** 2)
     plt.show()
-
-# this check the algorithm for finding strongly connected component in a graph.
-# Tarjan's algorithm.
-
-def comps():
-    graph = DiGraph()
-    for n in range(8):
-        graph.add_node(n)
-
-    graph.add_edge(0, 1, 1)
-    graph.add_edge(4, 0, 1)
-    graph.add_edge(1, 4, 1)
-    graph.add_edge(4, 5, 1)
-    graph.add_edge(1, 2, 1)
-    graph.add_edge(1, 5, 1)
-    graph.add_edge(5, 6, 1)
-    graph.add_edge(6, 5, 1)
-    graph.add_edge(2, 6, 1)
-    graph.add_edge(2, 3, 1)
-    graph.add_edge(3, 2, 1)
-    graph.add_edge(3, 7, 1)
-    graph.add_edge(7, 3, 1)
-    graph.add_edge(7, 6, 1)
-
-    ga = GraphAlgo(graph)
-
-    print(ga.connected_components())
-
 
 if __name__ == '__main__':
     check()

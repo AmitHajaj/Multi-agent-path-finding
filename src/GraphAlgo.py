@@ -57,7 +57,7 @@ class GraphAlgo(GraphAlgoInterface):
             graph : a class that implements GraphInterface
 
         """
-        self.graph = graph
+        self.graph = graph if graph is not None else DiGraph()
 
     def get_graph(self) -> GraphInterface:
         """
@@ -87,9 +87,9 @@ class GraphAlgo(GraphAlgoInterface):
             with open(filePath, "r") as graphJson:
                 graphObj = json.load(graphJson)
 
-                # initilaize graph's nodes
+                # initialize graph's nodes
                 for node in graphObj["Nodes"]:
-                    # initilaize node's pos
+                    # initialize node's pos
                     pos = None
                     posStr = node["pos"]
                     if posStr is not None:
@@ -132,6 +132,8 @@ class GraphAlgo(GraphAlgoInterface):
         graphObj = {"Nodes": [], "Edges": []}
         g = self.graph
         # assert (isinstance(g, DiGraph))
+
+        #TODO check if graph can be null
         if g is None:
             return False
 
@@ -176,8 +178,10 @@ class GraphAlgo(GraphAlgoInterface):
 
         Returns
         -------
-        bool
-            The distance of the path, a list of the nodes ids that the path goes through
+        float
+            The distance of the path
+        list
+            a list of the nodes ids that the path goes through
 
         """
         # if the graph is none.
