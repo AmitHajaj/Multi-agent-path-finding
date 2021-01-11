@@ -77,6 +77,7 @@ class DiGraph:
         self.nodes = {}  # {node_id, node_data(like Gson)}
         self.mc = 0
 
+
     def add_node(self, node_id: int, pos: tuple = None) -> bool:
         """
         Adds a node to the graph.
@@ -121,7 +122,11 @@ class DiGraph:
                    the number of edges this graph contains
 
        """
-        return len(self.edges)
+        edgesCounter = 0
+        edges = self.edges['From']
+        for key in edges:
+            edgesCounter += edges[key]
+        return edgesCounter
 
     def get_all_v(self) -> dict:
         """"
@@ -265,6 +270,9 @@ class DiGraph:
 
         otherNodes = other.get_all_v()
         # loop over nodes
+        if self.v_size() != other.v_size():
+            return False
+
         for key in self.nodes:
             # compare node's position
             if self.nodes[key]['pos'] != otherNodes[key]['pos']:

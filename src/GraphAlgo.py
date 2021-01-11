@@ -164,7 +164,7 @@ class GraphAlgo(GraphAlgoInterface):
             print("Couldn't open or write to file (%s)." % e)
             return False
         json.load(graphJson)
-        pass
+
 
     def shortest_path(self, src: int, dest: int) -> (float, list):
         """
@@ -269,7 +269,7 @@ class GraphAlgo(GraphAlgoInterface):
         # initialize some variables
         index = 0
         stack = []
-        sc_comp = [[]]
+        sc_comp = []
 
         # helper function.
         # recursive function that dfs over the tree.
@@ -314,6 +314,9 @@ class GraphAlgo(GraphAlgoInterface):
                         break
 
                 # it will return the SCC for node_id
+                # for element in temp:
+                #     if element == []:
+                #         temp.remove(element)
                 return temp
 
         for node in self.graph.nodes.keys():
@@ -329,6 +332,11 @@ class GraphAlgo(GraphAlgoInterface):
         # when finished set back the values used to deafult.
         for node in self.graph.nodes.keys():
             self.graph.nodes[node]["for_scc"] = {"index": -1, "low_link": node, "on_stack": False}
+
+        # # TODO make a better fix
+        # for element in ans:
+        #     if element == []:
+        #         ans.remove(element)
 
         return ans
 
@@ -425,6 +433,7 @@ class GraphAlgo(GraphAlgoInterface):
             for neighbor in self.graph.edges["From"][node_id]:
                 self.dfs(visited, neighbor)
 
+    #TODO is argument dest_node is needed
     def dijkstra(self, src_node, dest_node):
         """
             implementation of the Dijkstra algorithm for finding a shortest path
