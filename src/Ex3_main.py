@@ -35,8 +35,8 @@ def check():
     # plt.plot(x1, y1, x2, y2, marker='d')
     # plt.show()
     check0()
-    # check1()
-    # check2()
+    check1()
+    check2()
 
 
 def check0():
@@ -76,7 +76,7 @@ def check0():
         print("sh!t")
 
     g_algo.load_from_json(file2)
-    if g_algo.get_graph().equals(g):
+    if g_algo.get_graph() == g:
         print("good")
     else:
         print("sh!t")
@@ -105,22 +105,45 @@ def check2():
     """ This function tests the naming, basic testing over A5 json file.
       :return:
       """
-    g_algo = GraphAlgo()
-    file = '../data/A5'
-    g_algo.load_from_json(file)
-    g_algo.get_graph().remove_edge(13, 14)
-    g_algo.save_to_json(file + "_edited")
-    dist, path = g_algo.shortest_path(1, 7)
-    print(dist, path)
-    dist, path = g_algo.shortest_path(47, 19)
-    print(dist, path)
-    dist, path = g_algo.shortest_path(20, 2)
-    print(dist, path)
-    dist, path = g_algo.shortest_path(2, 20)
-    print(dist, path)
-    print(g_algo.connected_component(0))
-    print(g_algo.connected_components())
-    g_algo.plot_graph()
+    graph = DiGraph()
+    for i in range(8):
+        graph.add_node(i)
+
+    graph.add_edge(0, 1, 1)
+    graph.add_edge(1, 2, 1)
+    graph.add_edge(1, 4, 1)
+    graph.add_edge(1, 5, 1)
+    graph.add_edge(4, 5, 1)
+    graph.add_edge(4, 0, 1)
+    graph.add_edge(2, 6, 1)
+    graph.add_edge(2, 3, 1)
+    graph.add_edge(5, 6, 1)
+    graph.add_edge(6, 5, 1)
+    graph.add_edge(7, 6, 1)
+    graph.add_edge(3, 7, 1)
+    graph.add_edge(7, 3, 1)
+    graph.add_edge(3, 2, 1)
+
+    ga = GraphAlgo(graph)
+    print(ga.connected_components())
+
+
+    # g_algo = GraphAlgo()
+    # file = '../data/A5'
+    # g_algo.load_from_json(file)
+    # g_algo.get_graph().remove_edge(13, 14)
+    # g_algo.save_to_json(file + "_edited")
+    # dist, path = g_algo.shortest_path(1, 7)
+    # print(dist, path)
+    # dist, path = g_algo.shortest_path(47, 19)
+    # print(dist, path)
+    # dist, path = g_algo.shortest_path(20, 2)
+    # print(dist, path)
+    # dist, path = g_algo.shortest_path(2, 20)
+    # print(dist, path)
+    # print(g_algo.connected_component(0))
+    # print(g_algo.connected_components())
+    # g_algo.plot_graph()
 
 
 if __name__ == '__main__':

@@ -186,6 +186,13 @@ class TestGraphAlgo(unittest.TestCase):
         # #  no edges
         # noEdges_g = (create_graph(10))[0]
 
+    def test_reverse(self):
+        g = create_graph(self, 30, 10)[0]
+        ga = GraphAlgo(g)
+        g1 = ga.reverse()
+        print("")
+
+
 
 def saveAndLoad(filePath: str, g: DiGraph, ga: GraphAlgo) -> None:
     emptyGraph = DiGraph()
@@ -213,6 +220,7 @@ def create_graph(self, nodeSize: int, edgeSize: int = 0, pathLen: int = 0, setPo
         else:
             g.add_node(key)
 
+
     # add edges
     while 0 < edgeSize:
         key1 = random.choice(range(nodeSize))
@@ -235,7 +243,6 @@ def create_graph(self, nodeSize: int, edgeSize: int = 0, pathLen: int = 0, setPo
             i += 1
 
     return g, (pathKeys, dist)
-
 
 if __name__ == '__main__':
     unittest.main()
