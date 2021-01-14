@@ -63,11 +63,13 @@ def check0():
     #TODO add comperrator to graph in order to fix this text and move it to tester
     #short test
     g_algo = GraphAlgo(g)
+    g_algo.old_plot_graph()
     g_algo.plot_graph()
     file1 = '../data/A5'
     file2 = '../data/A6'
     g_algo.save_to_json(file2)
     g_algo.load_from_json(file1)
+    g_algo.old_plot_graph()
     g_algo.plot_graph()
 
     if not g_algo.get_graph() != g:
@@ -76,7 +78,7 @@ def check0():
         print("sh!t")
 
     g_algo.load_from_json(file2)
-    if g_algo.get_graph().equals(g):
+    if g_algo.get_graph() == g:
         print("good")
     else:
         print("sh!t")
@@ -84,7 +86,55 @@ def check0():
     # g_algo = GraphAlgo(g)
     # print(g_algo.shortest_path(0, 3))
     # g_algo.plot_graph()
-
+#
+# def plot():
+#     barWidth = 0.2
+#
+#     # set height of bar
+#
+#     networkX = [0.0,0.0,0.0]
+#     java = [0.0,0.0,0.0]
+#     python = [0.0,0.0,0.0]
+#
+#     print("networkX")
+#     networkX[0] = float(input("shortest path: "))
+#     networkX[1] = float(input("connected components: "))
+#
+#     print("java")
+#     java[0] = float(input("shortest path: "))
+#     java[1] = float(input("connected components: "))
+#     java[2] = float(input("connected component: "))
+#
+#
+#     print("python")
+#     python[0] = float(input("shortest path: "))
+#     python[1] = float(input("connected components: "))
+#     python[2] = float(input("connected component: "))
+#
+#     # Set position of bar on X axis
+#     r1 = np.arange(len(networkX))
+#     r2 = [x + barWidth for x in r1]
+#     r3 = [x + barWidth for x in r2]
+#
+#     # Make the plot
+#     plt.bar(r1, networkX, color='blue', width=barWidth, edgecolor='black', label='networkX')
+#     plt.bar(r2, java, color='purple', width=barWidth, edgecolor='black', label='java')
+#     plt.bar(r3, python, color='orange', width=barWidth, edgecolor='black', label='python')
+#
+#     # Add xticks on the middle of the group bars
+#     plt.xlabel('methods', fontweight='bold')
+#     plt.xticks([r + barWidth for r in range(len(networkX))], ['shortest path', 'connected components', 'connected component'])
+#
+#     # Create legend & Show graphic
+#     plt.xlabel("methods")
+#     plt.ylabel("run-time in Seconds ")
+#     plt.title("avg run-time")
+#
+#     plt.legend()
+#     plt.show()
+#
+# if _name_ == '_main_':
+#     plot()
 
 def check1():
     """
@@ -98,7 +148,7 @@ def check1():
     print(g_algo.shortest_path(0, 3))
     print(g_algo.shortest_path(3, 1))
     g_algo.save_to_json(file + '_saved')
-    g_algo.plot_graph()
+    g_algo.old_plot_graph()
 
 
 def check2():
@@ -120,7 +170,7 @@ def check2():
     print(dist, path)
     print(g_algo.connected_component(0))
     print(g_algo.connected_components())
-    g_algo.plot_graph()
+    g_algo.old_plot_graph()
 
 
 if __name__ == '__main__':

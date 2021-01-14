@@ -2,12 +2,10 @@ import GraphInterface
 from GraphAlgoInterface import GraphAlgoInterface
 from DiGraph import DiGraph
 import matplotlib.pyplot as plt
+import copy
 import math
 import json
-import heapq
 import sys
-# for debugging
-import time
 
 
 class GraphAlgo(GraphAlgoInterface):
@@ -19,6 +17,12 @@ class GraphAlgo(GraphAlgoInterface):
     ----------
     graph : DiGraph
         object representing a graph
+
+    edgesList :  list
+        all edges represented by tuple => (src, dest, weight)
+
+    nodesDict : dict
+        all nodes represented by dict => {id:pos}
 
     Methods
     -------
@@ -56,9 +60,17 @@ class GraphAlgo(GraphAlgoInterface):
         Parameters
         ----------
             graph : a class that implements GraphInterface
+            
+            edgesList :  list of all edges represented by tuple => (src, dest, weight)
+
+            nodesDict : dict of all nodes represented by dict => {id:pos}
 
         """
         self.graph = graph if graph is not None else DiGraph()
+        self.edgesList = []
+        self.nodesDict = {}
+        self.loadGraph = False
+        # TODO manage edgesList nodesDict
 
     def get_graph(self) -> GraphInterface:
         """
@@ -69,6 +81,16 @@ class GraphAlgo(GraphAlgoInterface):
         """
         return self.graph
 
+    def set_graph(self, g: DiGraph) -> None:
+        """
+        Returns
+        -------
+        GraphInterface
+            the directed graph on which the algorithm works on.
+        """
+        self.graph = g
+        self.loadGraph = False
+
     def load_from_json(self, filePath: str) -> bool:
         """
         loads a graph from a text file
@@ -77,6 +99,9 @@ class GraphAlgo(GraphAlgoInterface):
         ----------
         filePath: str
             address to the text file
+        
+        makeTuple: bool
+            if 
 
         Returns
         -------
@@ -84,30 +109,35 @@ class GraphAlgo(GraphAlgoInterface):
             a flag used to indicate if the graph's load was successful
         """
         try:
+            self.nodesDict = {}
+            self.edgesList = []
             g = DiGraph()
             with open(filePath, "r") as graphJson:
                 graphObj = json.load(graphJson)
 
-                # initialize graph's nodes
+                # init nodes
                 for node in graphObj["Nodes"]:
-                    # initialize node's pos
+                    # init pos
                     pos = None
-                    posStr = node["pos"]
-                    if posStr is not None:
-                        pos = []
-                        for coordinate in node["pos"].split(","):
-                            pos.append(coordinate)
-                        tuple(pos)
+                    if 'pos' in node and node["pos"] is not None:
+                        coordinate = node["pos"].split(",")
+                        pos = (float(coordinate[0]), float(coordinate[1]))
+                        self.nodesDict.update({node['id']: pos})
+                    else:
+                        self.nodesDict.update({node['id']: None})
 
-                    # add node to grap
+                    # add node to graph
                     g.add_node(node["id"], pos)
 
-                # initialize graph's edges
+                # init edges
                 for edge in graphObj["Edges"]:
+                    self.edgesList.append((edge["src"], edge["dest"]))
+
                     g.add_edge(edge["src"], edge["dest"], edge["w"])
 
                 graphJson.close()
                 self.graph = g
+                self.loadGraph = True
                 return True
 
         except IOError as e:
@@ -132,14 +162,14 @@ class GraphAlgo(GraphAlgoInterface):
         # make graphObj suitable for json format
         graphObj = {"Nodes": [], "Edges": []}
         g = self.graph
-        # assert (isinstance(g, DiGraph))
 
-        #TODO check if graph can be null
+        # TODO check if graph can be null
         if g is None:
             return False
 
         nodes = g.get_all_v()
         for key in nodes:
+            a = nodes[key]
             posTuple = nodes[key]["pos"]
 
             pos = None
@@ -164,7 +194,6 @@ class GraphAlgo(GraphAlgoInterface):
             print("Couldn't open or write to file (%s)." % e)
             return False
         json.load(graphJson)
-
 
     def shortest_path(self, src: int, dest: int) -> (float, list):
         """
@@ -333,14 +362,120 @@ class GraphAlgo(GraphAlgoInterface):
         for node in self.graph.nodes.keys():
             self.graph.nodes[node]["for_scc"] = {"index": -1, "low_link": node, "on_stack": False}
 
-        # # TODO make a better fix
-        # for element in ans:
-        #     if element == []:
-        #         ans.remove(element)
-
         return ans
 
-    def plot_graph(self) -> None:
+    def plot_graph(self, setTimer: bool = False, graphName: str = None) -> None:
+        """
+        Plots the graph.
+        If the nodes have a position, the nodes will be placed there.
+        Otherwise, they will be placed in a random but elegant manner.
+        @return: None
+        """
+        # graph data
+        if self.loadGraph:
+            nodes = self.nodesDict
+            edges = self.edgesList
+        else:
+            nodes = copy.deepcopy(self.graph.get_all_v())
+            for key in nodes:
+                nodes.update({key: nodes[key]['pos']})
+            edges = self.graph.get_all_e()
+
+        nodeSize = len(nodes)
+
+        if graphName is None:
+            graphName = 'Graph with '+ str(nodeSize) + ' Nodes, and ' + str(len(edges)) + 'Edges'
+        plt.ylabel('y axes')
+        plt.xlabel('x axes')
+        plt.title(graphName)
+        # TODO is ok?
+        if len(nodes) == 0:
+            return
+
+        # plot graph
+        if nodeSize > 1000:
+
+            # TODO if node have no pos
+
+            self.spreadEvenly(nodes)
+
+            # draw edges
+            for e in edges:
+                # edge data
+                src = e[0]
+                dest = e[1]
+                # w = e[2]
+
+                # get coordinates
+                srcX = nodes[src][0]
+                srcY = nodes[src][1]
+                destX = nodes[dest][0]
+                destY = nodes[dest][1]
+
+                # TODO check if line right
+                # draw nodes and edges
+                lineX, lineY = [srcX, destX], [srcY, destY]
+                plt.plot(lineX, lineY, color='k', zorder=0, marker='o')
+
+                # TODO draw nodes with no edges
+                # draw nodes with no edges
+
+        else:
+            # TODO make func return border
+            borders = self.spreadInCircle(nodes)
+
+            # ---draw graph---
+
+            # node size
+            windowLen = min(borders[0], borders[1])
+
+            nodeRadius = windowLen / (25)
+
+            for key in nodes:
+                # draw nodes
+                x = nodes[key][0]
+                y = nodes[key][1]
+
+                circle = plt.Circle((x, y), label=key, edgecolor='k', facecolor='r', radius=nodeRadius / 2, zorder=5)
+                plt.gcf().gca().add_artist(circle)
+
+            # draw edges
+            for e in edges:
+                # edge data
+                src = e[0]
+                dest = e[1]
+                # w = e[2]
+
+                # get coordinates
+                srcX = nodes[src][0]
+                srcY = nodes[src][1]
+                destX = nodes[dest][0]
+                destY = nodes[dest][1]
+
+                # draw a line (for a non-directed edge)
+                if self.isDirectedE(src, dest):
+                    lineX, lineY = [srcX, destX], [srcY, destY]
+                    plt.plot(lineX, lineY, color='k', zorder=0)
+
+                # draw an arrow (for a directed edge)
+                else:
+                    arrowLen = math.hypot(destY - srcY, destX - srcX)
+                    if arrowLen != 0:
+                        cosAngle = (destX - srcX) / arrowLen
+                        sinAngle = (destY - srcY) / arrowLen
+                        dx = (arrowLen - 2 * nodeRadius) * cosAngle
+                        dy = (arrowLen - 2 * nodeRadius) * sinAngle
+                        plt.arrow(srcX, srcY, dx, dy, head_width=nodeRadius, width=nodeRadius / 10, zorder=0)
+
+        # TODO check if was already closed
+        if setTimer:
+            plt.show(block=False)
+            plt.pause(1)
+            plt.close()
+        else:
+            plt.show()
+
+    def old_plot_graph(self) -> None:
         """
         Plots the graph.
         If the nodes have a position, the nodes will be placed there.
@@ -422,10 +557,74 @@ class GraphAlgo(GraphAlgoInterface):
                     plt.arrow(x, y, dx, dy, head_width=r, width=r / 10, zorder=0)
 
         plt.show()
-        # time.sleep(60)
 
-    def isDirectedE(self, node1, node2) -> bool:
-        return node1 in self.graph.edges['To'][node2] and node1 in self.graph.edges['From'][node2]
+    def spreadEvenly(self, nodes: dict) -> None:
+
+        # set borders
+        nSize = len(nodes)
+        sqrtNodes = math.ceil(math.sqrt(nSize))
+        plt.xlim([0, sqrtNodes])
+        plt.ylim([0, sqrtNodes])
+
+        # set positions
+        row = i = 0
+        while row < sqrtNodes:
+            col = 0
+            while col < sqrtNodes and i < nSize:
+                if nodes[i] is None:
+                    pos = (row + 0.5, col + 0.5)
+                    nodes.update({i: pos})
+                i += 1
+                col += 1
+            row += 1
+
+    def spreadInCircle(self, nodes: dict) -> list:
+        nSize = len(nodes)
+        maxX = maxY = float('-inf')
+        minX = minY = float('inf')
+
+        # set positions
+        hasLocations = False
+        i, circleRadius, center = 0, math.sqrt(nSize), (0, 0)
+        while i < nSize:
+            pos = nodes[i]
+            if pos is None:
+
+                # if part of nodes have locations
+                if not hasLocations:
+                    windowLen = [0, 0]
+                    border = min(windowLen[0], windowLen[1])
+                    maxX = maxY = circleRadius
+                    minX = minY = -circleRadius
+                elif border > 0:
+                    circleRadius = border
+                    windowLen = [maxX - minX, maxY - minY]
+
+                # calculate nodes positions
+                center = (windowLen[0] / 2, windowLen[1] / 2)
+                angle = math.radians(i * 360 / len(nodes))
+
+                pos = (circleRadius * math.cos(angle) + center[0], circleRadius * math.sin(angle) + center[1])
+                nodes[i] = pos
+            else:
+                maxX, minX = max(maxX, pos[0]), min(minX, pos[0])
+                maxY, minY = max(maxY, pos[1]), min(minY, pos[1])
+
+                hasLocations = True
+
+            i += 1
+
+        # set window size
+        windowLen = [maxX - minX, maxY - minY]
+        xMargin = windowLen[0] / 4
+        yMargin = windowLen[0] / 4
+        plt.xlim([minX - xMargin, maxX + xMargin])
+        plt.ylim([minY - yMargin, maxY + yMargin])
+
+        return windowLen
+
+    def isDirectedE(self, src, dest) -> bool:
+        return src in self.graph.edges['To'][dest] and src in self.graph.edges['From'][dest]
 
     def dfs(self, visited, node_id: int):
         if node_id not in visited:
@@ -433,7 +632,7 @@ class GraphAlgo(GraphAlgoInterface):
             for neighbor in self.graph.edges["From"][node_id]:
                 self.dfs(visited, neighbor)
 
-    #TODO is argument dest_node is needed
+    # TODO is argument dest_node is needed
     def dijkstra(self, src_node, dest_node):
         """
             implementation of the Dijkstra algorithm for finding a shortest path

@@ -1,5 +1,11 @@
+import os
 import unittest
 import random
+import time
+import json
+import numpy as np
+import networkx as nx
+import matplotlib.pyplot as plt
 from DiGraph import DiGraph
 from GraphAlgo import GraphAlgo
 from itertools import islice
@@ -11,7 +17,7 @@ class TestGraphAlgo(unittest.TestCase):
     def test_get_graph(self):
         #  create graphs
         emptyGraph = DiGraph()
-        g = (create_graph(self, 10, 40))[0]
+        g = (create_graph(10, 40))[0]
         ga = GraphAlgo()
 
         self.assertEqual(ga.get_graph(), emptyGraph, msg='GraphAlgo should contain empty graph when first initialized')
@@ -54,14 +60,14 @@ class TestGraphAlgo(unittest.TestCase):
         self.assertEqual(ga.get_graph(), noPos_g, msg='graph should`nt have change after save and load')
 
         #  no nodes (emptyGraph)
-        noNodes_g = (create_graph(self, 0))[0]
+        noNodes_g = (create_graph(0))[0]
         filePath = '../data/g3'
         saveAndLoad(filePath, noNodes_g, ga)
 
         self.assertEqual(ga.get_graph(), noNodes_g, msg='graph should`nt have change after save and load')
 
         #  no edges
-        noEdges_g = (create_graph(self, 10))[0]
+        noEdges_g = (create_graph(10))[0]
         filePath = '../data/g4'
         saveAndLoad(filePath, noEdges_g, ga)
 
@@ -69,7 +75,7 @@ class TestGraphAlgo(unittest.TestCase):
 
     def test_shortest_path(self):
         # get graph and path
-        g, pathTuple = (create_graph(self, 10, 20, pathLen=5))
+        g, pathTuple = (create_graph(10, 20, pathLen=5))
 
         pathList = pathTuple[0]
         pathDist = pathTuple[1]
@@ -97,18 +103,18 @@ class TestGraphAlgo(unittest.TestCase):
         dist, path = ga.shortest_path(nonExistingNode, 0)
 
         self.assertEqual(dist, float('inf'), msg='when source doesn`t exists, the path length should be float('
-                                                  '`inf`) => infinity')
+                                                 '`inf`) => infinity')
         self.assertEqual(path, pathList, msg='when source doesn`t exists, path should be an empty list => []')
 
         # check shortest_path when dest doesn't exist
         dist, path = ga.shortest_path(0, nonExistingNode)
 
         self.assertEqual(dist, float('inf'), msg='when destination doesn`t exists, the path length should be float('
-                                                  '`inf`) => infinity')
+                                                 '`inf`) => infinity')
         self.assertEqual(path, pathList, msg='when destination doesn`t exists, path should be an empty list => []')
 
     def test_connected_component(self):
-        g = create_graph(self, 30)[0]
+        g = create_graph(30)[0]
         emptyGraph = DiGraph()
 
         keysList = g.get_all_v().keys()
@@ -128,7 +134,6 @@ class TestGraphAlgo(unittest.TestCase):
                     b = chunk[j]
                     j += 1
                 i += 1
-
 
         # check algorithm with valid input
         ga = GraphAlgo(g)
@@ -166,25 +171,90 @@ class TestGraphAlgo(unittest.TestCase):
         self.assertEqual(scc, [], msg='if node dosnt exists the function should return empty list =>[]')
 
     def test_plot_graph(self):
-        self.assertTrue(True)
-        # TODO check how to test this method
-        # g = (create_graph(10, 20))
-        # ga = GraphAlgo(g)
-        #
-        # # check valid input
-        # ga.plot_graph()
-        # # check algorithm with valid input
-        # ga = GraphAlgo(g)
-        #
-        # #  no position
-        # noPos_g = (create_graph(10, 10))[0]
-        #
-        # #  no nodes (emptyGraph)
-        # noNodes_g = (create_graph(0))[0]
-        #
-        #
-        # #  no edges
-        # noEdges_g = (create_graph(10))[0]
+        # check valid input
+        g = create_graph(10, 20, setPos=True)[0]
+        ga = GraphAlgo(g)
+
+        ga.plot_graph(setTimer=True)
+
+        # --- plot a graph with missing elements (position, nodes, edges): ---
+
+        #  --no positions--
+        ga.graph = (create_graph(10, 10))[0]
+        ga.plot_graph(setTimer=True)
+
+        #  --no nodes (emptyGraph)--
+        ga.graph = (create_graph(0))[0]
+        ga.plot_graph(setTimer=True)
+
+        # --no edges--
+        ga.graph = (create_graph(10))[0]
+        ga.plot_graph(setTimer=True)
+
+    def test_time(self):
+        timeTable = {'SP': {}, 'SCC': {}, 'netWorkX': {}, 'plt': {}}
+
+        # load graph's folder
+        ga = GraphAlgo()
+        folderPath = '../TestGraphs'
+        directory = os.fsencode(folderPath)
+
+        # iterate graphs
+        for file in os.listdir(directory):
+            # load graph
+            fileName = os.fsdecode(file)
+            ga.load_from_json('../TestGraphs/' + fileName)
+            nSize = ga.get_graph().v_size()
+
+            if True:
+
+                start = time.time()
+                ga.plot_graph()
+                mid = time.time()
+                networkxBuild(ga)
+                end = time.time()
+
+                # update timeTable
+                plt_graph_time = end - mid
+                networkx_time = mid - start
+                timeTable['plt'].update({fileName: plt_graph_time})
+                timeTable['netWorkX'].update({fileName: networkx_time})
+
+                # check shortest_path
+                start = time.time()
+                ga.shortest_path(0, nSize / 2)
+                end = time.time()
+
+                # update timeTable
+                shortest_path_Time = end - start
+                timeTable['SP'].update({fileName: shortest_path_Time})
+
+                # check connected_components
+                start = time.time()
+                ga.connected_components()
+                end = time.time()
+
+                # update timeTable
+                shortest_path_Time = end - start
+                timeTable['SCC'].update({fileName: shortest_path_Time})
+        filePath = '../data/test'
+        with open(filePath, 'w') as graphJson:
+            json.dump(timeTable, graphJson, indent=4)
+
+
+def networkxBuild(ga: GraphAlgo):
+
+    nxG = nx.DiGraph()
+    g = ga.get_graph()
+
+    # draw nodes
+    nxG.add_nodes_from(ga.nodesDict)
+
+    # draw edge
+    nxG.add_edges_from(ga.edgesList)
+
+    nx.draw(nxG)
+    plt.show()
 
 
 def saveAndLoad(filePath: str, g: DiGraph, ga: GraphAlgo) -> None:
@@ -200,7 +270,7 @@ def saveAndLoad(filePath: str, g: DiGraph, ga: GraphAlgo) -> None:
     ga.load_from_json(filePath)
 
 
-def create_graph(self, nodeSize: int, edgeSize: int = 0, pathLen: int = 0, setPos: bool = False) -> (DiGraph, list):
+def create_graph(nodeSize: int, edgeSize: int = 0, pathLen: int = 0, setPos: bool = False) -> (DiGraph, list):
     random.seed(1)
     g = DiGraph()
 
@@ -228,7 +298,7 @@ def create_graph(self, nodeSize: int, edgeSize: int = 0, pathLen: int = 0, setPo
     if pathLen > 0:
         pathKeys = random.sample(keyList, pathLen)
         i = 0
-        while pathLen-1 > i:
+        while pathLen - 1 > i:
             w = random.uniform(0, 1)
             g.add_edge(pathKeys[i], pathKeys[i + 1], w)
             dist += w

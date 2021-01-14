@@ -2,9 +2,6 @@ from GraphInterface import GraphInterface
 
 
 class DiGraph:
-    # TODO construct a graph than can easily make a Json like: {"edges": [{src, weigh, dest}...], "nodes": [{pos: (x, y, z), id}...]}
-    # TODO add raises to methods
-
     """
       A class representing graph
     ...
@@ -63,7 +60,7 @@ class DiGraph:
                 node_id:{
                     "tag": int,
                     "info": "",
-                    "pos":(x,y,z),
+                    "pos":(x,y),
                     "prev": int
                 }
             }
@@ -76,7 +73,7 @@ class DiGraph:
         self.edges = {"From": {}, "To": {}}  # {src_id: {dest, weight}}
         self.nodes = {}  # {node_id, node_data(like Gson)}
         self.mc = 0
-
+        self.edgeSize = 0
 
     def add_node(self, node_id: int, pos: tuple = None) -> bool:
         """
@@ -96,7 +93,8 @@ class DiGraph:
         """
 
         if node_id not in self.nodes:
-            self.nodes[node_id] = {"tag": 0, "info": "", "pos": pos, "prev": None, "for_scc": {"index": -1, "low_link": node_id, "on_stack": False}}
+            self.nodes[node_id] = {"tag": 0, "info": "", "pos": pos, "prev": None,
+                                   "for_scc": {"index": -1, "low_link": node_id, "on_stack": False}}
             self.edges["From"][node_id] = {}
             self.edges["To"][node_id] = {}
             self.mc += 1
@@ -122,11 +120,7 @@ class DiGraph:
                    the number of edges this graph contains
 
        """
-        edgesCounter = 0
-        edges = self.edges['From']
-        for key in edges:
-            edgesCounter += edges[key]
-        return edgesCounter
+        return self.edgeSize
 
     def get_all_v(self) -> dict:
         """"
@@ -138,6 +132,24 @@ class DiGraph:
 
                """
         return self.nodes
+
+    def get_all_e(self) -> dict:
+        """"
+               Returns
+               -------
+               dict
+                   a dictionary of vertices this graph contains.
+                   node is represented using a pair (node_id, node_data)
+
+               """
+        # From: {src: {dest: w}
+        edges = []
+        for key, value in self.edges['From'].items():
+            for nei in value.keys():
+                edge = (key, nei)
+                edges.append(edge)
+
+        return edges
 
     def all_in_edges_of_node(self, node_id: int) -> dict:
         """"
@@ -211,6 +223,8 @@ class DiGraph:
             self.edges["From"][src].update({dest: weight})
             self.edges["To"][dest].update({src: weight})
 
+            # manage counters
+            self.edgeSize += 1
             self.mc += 1
             return True
         else:
@@ -231,10 +245,12 @@ class DiGraph:
        """
         if node_id in self.nodes:
             del self.nodes[node_id]
-            removedNodeE = self.edges["From"].pop(node_id);
-            for neighbor_id in removedNodeE:
-                del self.edges["From"][neighbor_id]
+            edgesToNode = self.edges['To'].pop(node_id);
+            for neiKey in edgesToNode:
+                del self.edges["From"][neiKey][node_id]
 
+            # manage counters
+            self.edgeSize -= len(edgesToNode)
             self.mc += 1
             return True
         else:
@@ -258,6 +274,9 @@ class DiGraph:
         if {src, dest} <= self.nodes.keys():
             del self.edges["From"][src][dest]
             del self.edges["To"][dest][src]
+
+            # manage counters
+            self.edgeSize -= 1
             self.mc += 1
             return True
         else:
