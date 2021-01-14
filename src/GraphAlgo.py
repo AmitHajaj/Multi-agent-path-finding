@@ -632,8 +632,9 @@ class GraphAlgo(GraphAlgoInterface):
             for neighbor in v_neighbors[curr].keys():
                 if (self.graph.nodes[curr]["tag"] + v_neighbors[curr][neighbor]) < self.graph.nodes[neighbor]["tag"]:
                     # update the distance
-                    pq.remove((self.graph.nodes[neighbor]["tag"], neighbor))
-                    self.graph.nodes[neighbor]["tag"] = self.graph.nodes[curr]["tag"] + v_neighbors[curr][neighbor]
-                    heappush(pq, (self.graph.nodes[neighbor]["tag"], neighbor))
-                    # update parent node
-                    self.graph.nodes[neighbor]["prev"] = curr
+                    if neighbor in pq:
+                        pq.remove((self.graph.nodes[neighbor]["tag"], neighbor))
+                        self.graph.nodes[neighbor]["tag"] = self.graph.nodes[curr]["tag"] + v_neighbors[curr][neighbor]
+                        heappush(pq, (self.graph.nodes[neighbor]["tag"], neighbor))
+                        # update parent node
+                        self.graph.nodes[neighbor]["prev"] = curr
