@@ -63,13 +63,11 @@ def check0():
     #TODO add comperrator to graph in order to fix this text and move it to tester
     #short test
     g_algo = GraphAlgo(g)
-    g_algo.old_plot_graph()
     g_algo.plot_graph()
     file1 = '../data/A5'
     file2 = '../data/A6'
     g_algo.save_to_json(file2)
     g_algo.load_from_json(file1)
-    g_algo.old_plot_graph()
     g_algo.plot_graph()
 
     if not g_algo.get_graph() != g:
@@ -148,7 +146,7 @@ def check1():
     print(g_algo.shortest_path(0, 3))
     print(g_algo.shortest_path(3, 1))
     g_algo.save_to_json(file + '_saved')
-    g_algo.old_plot_graph()
+
 
 
 def check2():
