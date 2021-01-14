@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import copy
 import math
 import json
-import heapq
+from heapq import *
 import sys
 # for debugging
 import time
@@ -423,7 +423,7 @@ class GraphAlgo(GraphAlgoInterface):
         plt.ylabel('y axes')
         plt.xlabel('x axes')
         plt.title(graphName)
-        # TODO is ok?
+        # TODO - create an empty window.
         if len(nodes) == 0:
             return
 
@@ -596,35 +596,44 @@ class GraphAlgo(GraphAlgoInterface):
         """
         # initially, all nodes are unvisited
         q = []
+        pq = []
 
         # set all nodes distance to infinity,
         # and all prev to None.
         for node in self.graph.nodes.keys():
             self.graph.nodes[node]["tag"] = sys.maxsize
             self.graph.nodes[node]["prev"] = None
-            q.append(node)
+            temp = (self.graph.nodes[node]["tag"], node)
+            heappush(pq, temp)
 
         # set the src_node to zero.
+        pq.remove((self.graph.nodes[src_node]["tag"], src_node))
         self.graph.nodes[src_node]["tag"] = 0
-        curr = src_node
+        heappush(pq, (self.graph.nodes[src_node]["tag"], src_node))
+        heapify(pq)
 
-        while len(q) > 0:
+        while len(pq) > 0:
             # choose the minimum weigh in the graph edges
-            temp = sys.maxsize
-            for node in self.graph.nodes.keys():
-                if self.graph.nodes[node]["tag"] < temp and node in q:
-                    temp = self.graph.nodes[node]["tag"]
-                    curr = node
+            curr = heappop(pq)[1]
+
+            # temp = sys.maxsize
+            # for node in self.graph.nodes.keys():
+            #     if self.graph.nodes[node]["tag"] < temp and node in q:
+            #         temp = self.graph.nodes[node]["tag"]
+            #         curr = node
             # in case all other node are not reachable
-            if temp == sys.maxsize:
-                curr = q.pop()
-            else:
-                q.remove(curr)
+            # if temp == sys.maxsize:
+            #     curr = q.pop()
+            # else:
+            #     q.remove(curr)
+
             # relaxation on the neighbors of curr.
             v_neighbors = {k: v for (k, v) in self.graph.edges["From"].items() if curr == k}
             for neighbor in v_neighbors[curr].keys():
                 if (self.graph.nodes[curr]["tag"] + v_neighbors[curr][neighbor]) < self.graph.nodes[neighbor]["tag"]:
                     # update the distance
+                    pq.remove((self.graph.nodes[neighbor]["tag"], neighbor))
                     self.graph.nodes[neighbor]["tag"] = self.graph.nodes[curr]["tag"] + v_neighbors[curr][neighbor]
+                    heappush(pq, (self.graph.nodes[neighbor]["tag"], neighbor))
                     # update parent node
                     self.graph.nodes[neighbor]["prev"] = curr

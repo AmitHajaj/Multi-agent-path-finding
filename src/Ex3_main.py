@@ -175,6 +175,8 @@ def check2():
     ga = GraphAlgo(graph)
     print(ga.connected_components())
 
+    print(ga.shortest_path(0, 7))
+
 
     # g_algo = GraphAlgo()
     # file = '../data/A5'

@@ -11,9 +11,9 @@ from GraphAlgo import GraphAlgo
 from itertools import islice
 
 
+
 class TestGraphAlgo(unittest.TestCase):
 
-    # TODO check seeds
     def test_get_graph(self):
         #  create graphs
         emptyGraph = DiGraph()
@@ -41,7 +41,6 @@ class TestGraphAlgo(unittest.TestCase):
         ga.graph = None
         b = ga.save_to_json('g')
         self.assertFalse(b)
-        # TODO is assert right
 
         # use pre-existing path
         filePath = '../data/g1'
@@ -75,7 +74,7 @@ class TestGraphAlgo(unittest.TestCase):
 
     def test_shortest_path(self):
         # get graph and path
-        g, pathTuple = (create_graph(10, 20, pathLen=5))
+        g, pathTuple = (create_graph(100, 800, pathLen=15))
 
         pathList = pathTuple[0]
         pathDist = pathTuple[1]
@@ -203,15 +202,18 @@ class TestGraphAlgo(unittest.TestCase):
         for file in os.listdir(directory):
             # load graph
             fileName = os.fsdecode(file)
+            print("load from json.\n")
             ga.load_from_json('../TestGraphs/' + fileName)
             nSize = ga.get_graph().v_size()
 
             if True:
-
+                print("nodesize  ", nSize)
                 start = time.time()
-                ga.plot_graph()
+                nx_SP = networkxBuild(ga)
+                print("build nxgraph\n")
                 mid = time.time()
-                networkxBuild(ga)
+                # ga.plot_graph()
+                print("ploting the graph\n")
                 end = time.time()
 
                 # update timeTable
@@ -219,9 +221,11 @@ class TestGraphAlgo(unittest.TestCase):
                 networkx_time = mid - start
                 timeTable['plt'].update({fileName: plt_graph_time})
                 timeTable['netWorkX'].update({fileName: networkx_time})
+                timeTable['netWorkX'].update({fileName: nx_SP})
 
                 # check shortest_path
                 start = time.time()
+                print("shortest_path by us\n")
                 ga.shortest_path(0, nSize / 2)
                 end = time.time()
 
@@ -231,6 +235,7 @@ class TestGraphAlgo(unittest.TestCase):
 
                 # check connected_components
                 start = time.time()
+                print("connected_components by us\n")
                 ga.connected_components()
                 end = time.time()
 
@@ -242,7 +247,7 @@ class TestGraphAlgo(unittest.TestCase):
             json.dump(timeTable, graphJson, indent=4)
 
 
-def networkxBuild(ga: GraphAlgo):
+def networkxBuild(ga: GraphAlgo) -> float:
 
     nxG = nx.DiGraph()
     g = ga.get_graph()
@@ -253,8 +258,16 @@ def networkxBuild(ga: GraphAlgo):
     # draw edge
     nxG.add_edges_from(ga.edgesList)
 
-    nx.draw(nxG)
-    plt.show()
+    start = time.time()
+    nx.shortest_path(nxG, 0, nxG.number_of_nodes()/2)
+    end = time.time()
+
+    ans = end-start
+
+    # nx.draw(nxG)
+    # plt.show() #put here false
+
+    return ans
 
     def test_reverse(self):
         g = create_graph(self, 30, 10)[0]
