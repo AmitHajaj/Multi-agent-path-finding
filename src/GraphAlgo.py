@@ -5,7 +5,10 @@ import matplotlib.pyplot as plt
 import copy
 import math
 import json
+import heapq
 import sys
+# for debugging
+import time
 
 
 class GraphAlgo(GraphAlgoInterface):
@@ -60,7 +63,7 @@ class GraphAlgo(GraphAlgoInterface):
         Parameters
         ----------
             graph : a class that implements GraphInterface
-            
+
             edgesList :  list of all edges represented by tuple => (src, dest, weight)
 
             nodesDict : dict of all nodes represented by dict => {id:pos}
@@ -99,9 +102,9 @@ class GraphAlgo(GraphAlgoInterface):
         ----------
         filePath: str
             address to the text file
-        
+
         makeTuple: bool
-            if 
+            if
 
         Returns
         -------
@@ -162,8 +165,8 @@ class GraphAlgo(GraphAlgoInterface):
         # make graphObj suitable for json format
         graphObj = {"Nodes": [], "Edges": []}
         g = self.graph
+        # assert (isinstance(g, DiGraph))
 
-        # TODO check if graph can be null
         if g is None:
             return False
 
@@ -295,74 +298,106 @@ class GraphAlgo(GraphAlgoInterface):
         if self.graph is None or self.graph.v_size() == 0:
             return []
 
-        # initialize some variables
-        index = 0
-        stack = []
-        sc_comp = []
+        components = []
+        d_time = []
 
-        # helper function.
-        # recursive function that dfs over the tree.
-        # it does it with some changes to fit our goal of finding SCC
-        def strong_connect(node_id: int) -> list:
-            nonlocal index
-            nonlocal stack
-            nonlocal sc_comp
-
-            self.graph.nodes[node_id]["for_scc"]["index"] = index
-            self.graph.nodes[node_id]["for_scc"]["low_link"] = index
-            index += 1
-            stack.append(node_id)
-            self.graph.nodes[node_id]["for_scc"]["on_stack"] = True
-
-            # Consider successors of node_id
-            for neighbor in self.graph.edges["From"][node_id].keys():
-                if self.graph.nodes[neighbor]["for_scc"]["index"] == -1:
-                    # Successor w has not yet been visited; recurse on it
-                    sc_comp.append(strong_connect(neighbor))
-                    self.graph.nodes[node_id]["for_scc"]["low_link"] = min(
-                        self.graph.nodes[node_id]["for_scc"]["low_link"],
-                        self.graph.nodes[neighbor]["for_scc"]["low_link"])
-                elif self.graph.nodes[neighbor]["for_scc"]["on_stack"]:
-                    # Successor neighbor is in stack, and hence in the current SCC
-                    # If w is not on stack, then (node_id, neighbor) is an edge pointing to an SCC already found and must be ignored
-                    # Note: The next line may look odd - but is correct.
-                    # It says w.index not w.lowlink; that is deliberate and from the original paper
-                    self.graph.nodes[node_id]["for_scc"]["low_link"] = min(
-                        self.graph.nodes[node_id]["for_scc"]["low_link"],
-                        self.graph.nodes[neighbor]["for_scc"]["index"])
-
-            # if node_id is a root node, pop the stack and generate an SCC
-            if self.graph.nodes[node_id]["for_scc"]["low_link"] == self.graph.nodes[node_id]["for_scc"]["index"]:
-                temp = []
-
-                while True:
-                    w = stack.pop()
-                    self.graph.nodes[w]["for_scc"]["on_stack"] = False
-                    temp.append(w)
-                    if node_id == w:
-                        break
-
-                # it will return the SCC for node_id
-                # for element in temp:
-                #     if element == []:
-                #         temp.remove(element)
-                return temp
-
+        # mark all node as unvisited.
         for node in self.graph.nodes.keys():
-            if self.graph.nodes[node]["for_scc"]["index"] == -1:
-                sc_comp.append(strong_connect(node))
+            self.graph.nodes[node]["for_scc"]["on_stack"] = False
 
-        ans = []
-
-        for component in sc_comp:
-            if component is not None and component.__sizeof__() != 0:
-                ans.append(component)
-
-        # when finished set back the values used to deafult.
+        # make a list of all node based on their discovery time order.
         for node in self.graph.nodes.keys():
-            self.graph.nodes[node]["for_scc"] = {"index": -1, "low_link": node, "on_stack": False}
+            if not self.graph.nodes[node]["for_scc"]["on_stack"]:
+                self.dfs(node, d_time, False, self.graph)
 
-        return ans
+        # create a transposed graph.
+        t_graph = self.reverse()
+        d_time.reverse()
+
+        # mark all t_graph as not visited.
+        for node in t_graph.nodes.keys():
+            t_graph.nodes[node]["for_scc"]["on_stack"] = False
+
+        # now make another dfs on t_graph.
+        # but here we will consider the order of discover.
+        while d_time:
+            v = d_time.pop()
+            if not t_graph.nodes[v]["for_scc"]["on_stack"]:
+                components.append(self.dfs(v, d_time, True, t_graph))
+
+        return components
+
+    def reverse(self) -> DiGraph:
+        """
+            for a DiGraph, this method returns it's transposed graph.
+            Returns
+            -------
+            DiGraph
+                    the transposed graph.
+        """
+
+        graph = DiGraph()
+        graph.nodes = self.graph.nodes
+        graph.edges["From"] = self.get_graph().edges["To"]
+        graph.edges["To"] = self.get_graph().edges["From"]
+        return graph
+
+    def dfs(self, s: int, l: list, stat: bool, g: DiGraph) -> list:
+        """
+            dfs method with some improvement. in case 0 we update l to list order by discovery time.
+            in case 1 we make dfs to find the SCC for this node.
+
+            Parameters
+            ----------
+            s: int
+                source node.
+            l: list
+                list to set throw the case 0 dfs.
+            stat: bool
+                case to perform. false is case 0, true is case 1.
+            g: DiGraph
+                graph to perform dfs on.
+
+            Returns
+            -------
+                    None: for case 0.
+                    comp: for case 1 it returns a list that is a SCC for source node given.
+        """
+        # create stack for DFS
+        stack = [s]
+        g.nodes[s]["tag"] = 0
+        l.insert(g.nodes[s]["tag"], s)
+        if stat:
+            comp = []
+            stack = [s]
+
+        while stack.__len__() != 0:
+            s = stack.pop()
+            # if first seen, add him to the current component or to the list of time discover.
+            if not g.nodes[s]["for_scc"]["on_stack"]:
+                g.nodes[s]["for_scc"]["on_stack"] = True
+                if stat:
+                    comp.append(s)
+
+            indexer = 0
+            # now we need te check the neighbors of this node.
+            for ne in g.edges["From"][s].keys():
+
+                if not g.nodes[ne]["for_scc"]["on_stack"]:
+                    if stat:
+                        comp.append(ne)
+                        g.nodes[ne]["for_scc"]["on_stack"] = True
+                        stack.append(ne)
+                    else:
+                        g.nodes[ne]["for_scc"]["on_stack"] = True
+                        stack.append(ne)
+                        l.insert(g.nodes[s]["tag"]+1+indexer, ne)
+                        g.nodes[ne]["tag"] = g.nodes[s]["tag"]+1+indexer
+                        indexer += 1
+        if stat:
+            return comp
+        else:
+            return None
 
     def plot_graph(self, setTimer: bool = False, graphName: str = None) -> None:
         """
@@ -626,13 +661,7 @@ class GraphAlgo(GraphAlgoInterface):
     def isDirectedE(self, src, dest) -> bool:
         return src in self.graph.edges['To'][dest] and src in self.graph.edges['From'][dest]
 
-    def dfs(self, visited, node_id: int):
-        if node_id not in visited:
-            visited.add(node_id)
-            for neighbor in self.graph.edges["From"][node_id]:
-                self.dfs(visited, neighbor)
 
-    # TODO is argument dest_node is needed
     def dijkstra(self, src_node, dest_node):
         """
             implementation of the Dijkstra algorithm for finding a shortest path

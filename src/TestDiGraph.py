@@ -1,6 +1,7 @@
 import unittest
 from DiGraph import DiGraph
 
+
 class TestDiGraph(unittest.TestCase):
     def test_add_node(self):
         graph = DiGraph()
